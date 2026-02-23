@@ -1,0 +1,8 @@
+[build]
+nixpacks = ["java", "maven"]
+
+[build.install]
+cmds = ["mvn clean package -DskipTests -q"]
+
+[start]
+cmd = "java -Dserver.port=${PORT} -jar target/kanso-1.0.0.jar"
