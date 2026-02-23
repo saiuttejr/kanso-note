@@ -1,8 +1,0 @@
-[build]
-nixpacks = ["java", "maven"]
-
-[build.install]
-cmds = ["mvn clean package -DskipTests"]
-
-[start]
-cmd = "java -Dserver.port=${PORT} -jar app.jar"
