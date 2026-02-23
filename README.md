@@ -1,4 +1,5 @@
 # Kanso - By Sai Uttej R
+## Personal Finance Tracker
 
 A Java Spring Boot web app for tracking personal transactions with:
 - CSV upload/import
