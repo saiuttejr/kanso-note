@@ -1,0 +1,32 @@
+# Ignore Maven build output
+target/
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# IntelliJ
+.idea/
+
+# VSCode
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+
+# Node artifacts (in case any remain)
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+

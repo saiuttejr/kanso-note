@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+<main class="page">
+    <section class="hero">
+        <h1>Personal Finance Tracker</h1>
+        <p>Upload transactions, auto-categorize spending, and track unusual activity.</p>
+    </section>
+
+    <section class="alerts">
+        <p class="success" th:if="${message}" th:text="${message}"></p>
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+    </section>
+
+    <section class="summary-grid">
+        <article class="card stat">
+            <h2>Transactions</h2>
+            <p class="value" th:text="${transactionCount}"></p>
+        </article>
+        <article class="card stat">
+            <h2>Total Income</h2>
+            <p class="value income" th:text="${'$' + totalIncome}"></p>
+        </article>
+        <article class="card stat">
+            <h2>Total Expenses</h2>
+            <p class="value expense" th:text="${'$' + totalExpense}"></p>
+        </article>
+        <article class="card stat">
+            <h2>Net</h2>
+            <p class="value" th:classappend="${netPositive ? 'income' : 'expense'}"
+               th:text="${'$' + netFlow}"></p>
+        </article>
+    </section>
+
+    <section class="inputs">
+        <article class="card">
+            <h2>Add Transaction</h2>
+            <form method="post" th:action="@{/transactions/manual}">
+                <label>Date</label>
+                <input type="date" name="date" th:value="${today}" required>
+
+                <label>Description</label>
+                <input type="text" name="description" placeholder="Coffee shop" required>
+
+                <label>Amount</label>
+                <input type="text" name="amount" placeholder="-8.45 or 2500.00" required>
+
+                <label>Category (optional)</label>
+                <input type="text" name="category" placeholder="Dining">
+
+                <button type="submit">Add Transaction</button>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>Import CSV</h2>
+            <form method="post" enctype="multipart/form-data" th:action="@{/transactions/upload}">
+                <label>Transaction CSV</label>
+                <input type="file" name="file" accept=".csv" required>
+                <button type="submit">Upload CSV</button>
+            </form>
+            <p class="hint">Expected columns: <code>date,description,amount,category</code> (category optional).</p>
+            <form method="post" th:action="@{/transactions/load-sample}">
+                <button type="submit" class="secondary">Load Sample Data</button>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>Add Categorization Rule</h2>
+            <form method="post" th:action="@{/rules}">
+                <label>Keyword</label>
+                <input type="text" name="keyword" placeholder="starbucks" required>
+
+                <label>Category</label>
+                <input type="text" name="category" placeholder="Dining" required>
+
+                <button type="submit">Save Rule</button>
+            </form>
+
+            <h3>Custom Rules</h3>
+            <ul class="rules">
+                <li th:if="${#lists.isEmpty(customRules)}">No custom rules yet.</li>
+                <li th:each="rule : ${customRules}">
+                    <code th:text="${rule.keyword}"></code>
+                    <span>-></span>
+                    <strong th:text="${rule.category}"></strong>
+                </li>
+            </ul>
+
+            <details>
+                <summary>View default rules</summary>
+                <ul class="rules">
+                    <li th:each="rule : ${defaultRules}">
+                        <code th:text="${rule.keyword}"></code>
+                        <span>-></span>
+                        <strong th:text="${rule.category}"></strong>
+                    </li>
+                </ul>
+            </details>
+        </article>
+    </section>
+
+    <section class="insights">
+        <article class="card">
+            <h2>Monthly Trends</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Income</th>
+                    <th>Expenses</th>
+                    <th>Net</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(monthlyTrends)}">
+                    <td colspan="4">No transaction data yet.</td>
+                </tr>
+                <tr th:each="trend : ${monthlyTrends}">
+                    <td th:text="${trend.label}"></td>
+                    <td th:text="${'$' + trend.income}"></td>
+                    <td th:text="${'$' + trend.expense}"></td>
+                    <td th:classappend="${trend.positiveNet ? 'income' : 'expense'}"
+                        th:text="${'$' + trend.net}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article class="card">
+            <h2>Unusual Transactions</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Threshold</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(unusualTransactions)}">
+                    <td colspan="4">No anomalies detected yet.</td>
+                </tr>
+                <tr th:each="entry : ${unusualTransactions}">
+                    <td th:text="${entry.transaction.date}"></td>
+                    <td th:text="${entry.transaction.description}"></td>
+                    <td class="expense" th:text="${'$' + entry.absoluteAmount}"></td>
+                    <td th:text="${'$' + entry.threshold}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article class="card">
+            <h2>Current Month Spending by Category</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#maps.isEmpty(categorySpend)}">
+                    <td colspan="2">No current month expenses yet.</td>
+                </tr>
+                <tr th:each="entry : ${categorySpend}">
+                    <td th:text="${entry.key}"></td>
+                    <td class="expense" th:text="${'$' + entry.value}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+
+    <section class="transactions">
+        <article class="card">
+            <h2>All Transactions</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(transactions)}">
+                    <td colspan="4">No transactions yet.</td>
+                </tr>
+                <tr th:each="tx : ${transactions}">
+                    <td th:text="${tx.date}"></td>
+                    <td th:text="${tx.description}"></td>
+                    <td th:text="${tx.category}"></td>
+                    <td th:classappend="${tx.income ? 'income' : 'expense'}"
+                        th:text="${'$' + tx.amount}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+</main>
+</body>
+</html>
