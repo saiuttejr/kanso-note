@@ -1,9 +1,11 @@
-# Kanso - By Sai Uttej R
+# Kanso
 ## Personal Finance Tracker
+### By Sai Uttej R
 
-A Java Spring Boot web app for tracking personal transactions with:
+A Java Spring Boot web application for intelligent personal finance management with:
 - CSV upload/import
 - manual transaction entry
+- one-click transaction data reset
 - rule-based auto-categorization
 - monthly income/expense trends
 - unusual expense flagging
@@ -26,6 +28,7 @@ Open:
 ```text
 http://localhost:8080
 ```
+![alt text](image.png)
 
 ## How to Use
 
@@ -93,6 +96,7 @@ This is calculated from currently loaded expense transactions.
 - In-memory data only (no database yet)
 - Single-user local usage
 - Rule persistence resets on app restart
+- "Clear Transaction Data" removes all loaded transactions but keeps rules
 
 ## Suggested Next Iterations
 

@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kanso - By Sai Uttej R</title>
+    <meta name="description" content="Kanso - Personal Finance Tracker. Manage your transactions, auto-categorize spending, and track unusual activity with AI-powered insights.">
+    <meta name="author" content="Sai Uttej R">
+    <meta name="theme-color" content="#0f4c81">
+    <title>Kanso - Personal Finance Tracker by Sai Uttej R</title>
     <link rel="stylesheet" th:href="@{/styles.css}">
 </head>
 <body>
@@ -68,9 +71,12 @@
                 <button type="submit">Upload CSV</button>
             </form>
             <p class="hint">Expected columns: <code>date,description,amount,category</code> (category optional).</p>
-            <form method="post" th:action="@{/transactions/load-sample}">
-                <button type="submit" class="secondary">Load Sample Data</button>
+            <form method="post"
+                  th:action="@{/transactions/clear}"
+                  onsubmit="return confirm('Clear all current transactions? This cannot be undone.');">
+                <button type="submit" class="danger">Clear Transaction Data</button>
             </form>
+            <p class="hint">Clears all manual and CSV-imported transactions. Categorization rules stay unchanged.</p>
         </article>
 
         <article class="card">
@@ -209,6 +215,34 @@
             </table>
         </article>
     </section>
+
+    <section class="transactions">
+        <article class="card">
+            <h2>Help / First-Time Use</h2>
+            <p class="hint">
+                New here? You can load sample data to explore trends and anomaly detection before importing your own CSV.
+            </p>
+            <form method="post" th:action="@{/transactions/load-sample}">
+                <button type="submit" class="secondary">Load Sample Data (Optional)</button>
+            </form>
+        </article>
+    </section>
 </main>
+
+<footer class="app-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>Kanso</h4>
+            <p>Personal Finance Tracker</p>
+        </div>
+        <div class="footer-section">
+            <p class="developer-credit">Developed by <strong>Sai Uttej R</strong></p>
+            <p class="version">Version 1.0.0</p>
+        </div>
+        <div class="footer-section">
+            <p class="copyright">© 2026 Kanso. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
 </body>
 </html>

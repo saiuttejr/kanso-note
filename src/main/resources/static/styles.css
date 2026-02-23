@@ -28,16 +28,37 @@ body {
 
 .hero {
     margin-bottom: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(15, 76, 129, 0.1) 0%, rgba(15, 76, 129, 0.05) 100%);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
 }
 
 .hero h1 {
     margin: 0 0 6px;
-    font-size: 2rem;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+}
+
+.hero h2 {
+    margin: 6px 0 12px;
+    font-size: 1.1rem;
+    color: var(--muted);
+    font-weight: 500;
 }
 
 .hero p {
-    margin: 0;
+    margin: 6px 0;
     color: var(--muted);
+}
+
+.hero p:last-child {
+    font-weight: 500;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
 }
 
 .alerts {
@@ -149,6 +170,11 @@ button.secondary {
     margin-top: 8px;
 }
 
+button.danger {
+    background: #a61b1b;
+    margin-top: 8px;
+}
+
 .hint {
     font-size: 0.82rem;
     color: var(--muted);
@@ -198,8 +224,67 @@ th {
     font-weight: 600;
 }
 
+/* Footer Branding */
+.app-footer {
+    background: linear-gradient(135deg, var(--primary) 0%, #063d66 100%);
+    color: white;
+    padding: 32px 16px;
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    text-align: center;
+}
+
+.footer-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.footer-section p {
+    margin: 6px 0;
+    font-size: 0.9rem;
+    opacity: 0.95;
+}
+
+.developer-credit {
+    font-weight: 500;
+    color: #fff;
+}
+
+.developer-credit strong {
+    color: #ffeb3b;
+    font-weight: 600;
+}
+
+.version {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.copyright {
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+
 @media (max-width: 760px) {
     .page {
         padding: 16px 10px 30px;
+    }
+
+    .app-footer {
+        padding: 24px 16px;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
 }
