@@ -2,7 +2,7 @@
 nixpacks = ["java", "maven"]
 
 [build.install]
-cmds = ["mvn clean package -DskipTests -q"]
+cmds = ["mvn clean package -DskipTests"]
 
 [start]
-cmd = "java -Dserver.port=${PORT} -jar target/kanso-1.0.0.jar"
+cmd = "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${PORT}\""
