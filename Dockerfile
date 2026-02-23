@@ -1,18 +1,23 @@
-# Multi-stage build
+# Build stage
 FROM maven:3.9-eclipse-temurin-17 AS builder
-WORKDIR /app
+
+WORKDIR /build
+
 COPY pom.xml .
 COPY src ./src
+
 RUN mvn clean package -DskipTests
 
-# Runtime
-FROM eclipse-temurin:17-jdk-alpine
-WORKDIR /app
-COPY --from=builder /app/target/kanso-*.jar app.jar
+# Runtime stage
+FROM eclipse-temurin:17-jre-alpine
 
-# Set environment
-ENV PORT=8080
+WORKDIR /app
+
+# Copy the built JAR from builder stage
+COPY --from=builder /build/target/kanso-1.0.0.jar app.jar
+
+# Expose port (Railway will override with PORT env var)
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]

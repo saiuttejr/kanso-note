@@ -1,1 +1,1 @@
-web: mvn spring-boot:run
+web: java -Dserver.port=${PORT} -jar app.jar

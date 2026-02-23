@@ -5,4 +5,4 @@ nixpacks = ["java", "maven"]
 cmds = ["mvn clean package -DskipTests"]
 
 [start]
-cmd = "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${PORT}\""
+cmd = "java -Dserver.port=${PORT} -jar app.jar"
