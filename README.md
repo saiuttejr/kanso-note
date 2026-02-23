@@ -27,6 +27,38 @@ Open:
 http://localhost:8080
 ```
 
+## How to Use
+
+1. **Upload Transactions**
+   - Click the "Upload CSV" button on the dashboard
+   - Select a CSV file with your transaction data
+   - The app will import and auto-categorize your transactions
+
+2. **Add Manual Transactions**
+   - Use the "Add Transaction" form on the dashboard
+   - Enter the date, description, and amount
+   - Leave category blank for manual entry, or it will auto-categorize based on rules
+
+3. **View Dashboard Statistics**
+   - See total transactions count
+   - Track total income and expenses
+   - Monitor your net flow (income - expenses)
+
+4. **Review Categorized Transactions**
+   - All transactions are listed with their categories
+   - The rule engine automatically categorizes based on keywords
+   - Unusual transactions are highlighted with a warning icon
+
+5. **Track Monthly Trends**
+   - View income and expense trends by month
+   - Analyze spending patterns over time
+   - Identify seasonal variations in your finances
+
+6. **Manage Category Rules**
+   - Add custom keyword rules to auto-categorize transactions
+   - Rules are applied based on keywords in the transaction description
+   - Higher priority is given to custom rules over built-in rules
+
 ## CSV Format
 
 Upload a CSV with headers:
