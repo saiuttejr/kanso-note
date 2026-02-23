@@ -1,16 +1,64 @@
 date,description,amount,category
-2026-01-03,Monthly Salary,4200.00,Income
+2026-01-01,Monthly Salary,4200.00,Income
+2026-01-02,Freelance Project Payment,850.00,Income
 2026-01-05,Rent Payment,-1600.00,Housing
-2026-01-06,Costco Grocery,-214.38,
-2026-01-07,Uber Ride,-18.90,
-2026-01-10,Netflix Subscription,-15.49,
-2026-01-13,Shell Gas Station,-56.30,
-2026-01-17,Restaurant Downtown,-72.15,
-2026-01-22,Electric Bill,-120.80,
+2026-01-06,Costco Wholesale Grocery,-214.38,
+2026-01-07,Uber Ride,-18.90,Transportation
+2026-01-08,Whole Foods Market,-87.45,Groceries
+2026-01-10,Netflix Subscription,-15.49,Entertainment
+2026-01-12,Shell Gas Station,-56.30,Transportation
+2026-01-14,McDonald's Lunch,-12.75,Dining
+2026-01-15,Apple App Store Purchase,-9.99,Entertainment
+2026-01-17,Restaurant Downtown Fine Dining,-145.67,Dining
+2026-01-19,City Water Bill,-48.62,Utilities
+2026-01-22,Electric Bill,-120.80,Utilities
+2026-01-25,Walmart Supercenter,-156.23,Shopping
+2026-01-28,Gym Membership,-50.00,Fitness
 2026-02-01,Monthly Salary,4200.00,Income
+2026-02-02,Bonus Payment,600.00,Income
 2026-02-03,Rent Payment,-1600.00,Housing
-2026-02-06,Target Grocery,-167.22,
-2026-02-08,Amazon Purchase,-89.99,
-2026-02-11,Water Bill,-48.62,
-2026-02-16,Family Dinner,-96.44,Dining
+2026-02-06,Target Grocery Shopping,-167.22,Groceries
+2026-02-07,Chipotle Restaurant,-18.50,Dining
+2026-02-08,Amazon Online Purchase,-89.99,Shopping
+2026-02-10,Trader Joe's Groceries,-92.35,Groceries
+2026-02-11,Water Bill,-48.62,Utilities
+2026-02-12,Lyft Ride to Airport,-42.15,Transportation
+2026-02-14,Valentine Dinner Restaurant,-156.89,Dining
+2026-02-16,Best Buy Electronics Purchase,-349.00,Shopping
 2026-02-18,Emergency Car Repair,-920.00,Auto
+2026-02-20,Gas Station Chevron,-52.10,Transportation
+2026-02-22,Electric Bill,-125.30,Utilities
+2026-02-25,Spotify Premium,-12.99,Entertainment
+2026-02-28,Costco Grocery Run,-201.45,Groceries
+2026-03-01,Monthly Salary,4200.00,Income
+2026-03-03,Rent Payment,-1600.00,Housing
+2026-03-05,Whole Foods Market,-95.67,Groceries
+2026-03-07,Netflix Auto-Renewal,-15.49,Entertainment
+2026-03-08,Shell Gas Station,-54.20,Transportation
+2026-03-10,Coffee Shop Daily Brew,-5.50,Dining
+2026-03-12,Starbucks Multiple Visits,-28.75,Dining
+2026-03-14,Dental Checkup Insurance,-150.00,Healthcare
+2026-03-16,Uber Eats Food Delivery,-35.22,Dining
+2026-03-18,Amazon Prime Annual,-139.00,Shopping
+2026-03-19,Electric Bill,-118.90,Utilities
+2026-03-22,Walmart Purchase,-101.34,Shopping
+2026-03-24,Movie Theater Tickets,-32.00,Entertainment
+2026-03-25,Insurance Payment,-280.00,Insurance
+2026-03-27,Restaurant Dinner,-89.45,Dining
+2026-03-29,Costco Wholesale,-195.88,Groceries
+2026-04-01,Monthly Salary,4200.00,Income
+2026-04-02,Tax Refund,1200.00,Income
+2026-04-04,Rent Payment,-1600.00,Housing
+2026-04-06,Whole Foods Market,-88.90,Groceries
+2026-04-08,Petrol BP Gas Station,-59.75,Transportation
+2026-04-10,Water Bill,-48.62,Utilities
+2026-04-12,Vacation Flight Ticket,-650.00,Travel
+2026-04-14,Hotel Booking Cancellation,-245.00,Travel
+2026-04-16,Restaurant Splurge Dinner,-175.34,Dining
+2026-04-18,Electronics Purchase,-299.99,Shopping
+2026-04-20,Electric Bill,-122.45,Utilities
+2026-04-22,Costco Shopping Spree,-287.56,Groceries
+2026-04-24,Movie Night Out,-45.00,Entertainment
+2026-04-26,Unusual Large Purchase,-1850.00,Shopping
+2026-04-28,Car Maintenance Service,-385.00,Auto
+2026-04-30,Final Dinner Out,-92.15,Dining
