@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.bankingoop</groupId>
-    <artifactId>personal-finance-tracker</artifactId>
+    <artifactId>kanso</artifactId>
     <version>1.0.0</version>
-    <name>Personal Finance Tracker</name>
-    <description>Rule-based personal finance tracker with CSV import and anomaly detection</description>
+    <name>Kanso - By Sai Uttej R</name>
+    <description>Kanso: A rule-based finance tracker with CSV import and anomaly detection</description>
 
     <properties>
         <java.version>17</java.version>
