@@ -1,1 +1,1 @@
-web: java $JAVA_OPTS -jar target/kanso-1.0.0.jar
+web: java -Dserver.port=${PORT} -jar app.jar

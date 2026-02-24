@@ -30,31 +30,6 @@ http://localhost:8080
 ```
 ![alt text](image.png)
 
-## Deployment
-
-### Azure App Service
-For complete Azure deployment instructions with GitHub Actions CI/CD, see [AZURE_DEPLOYMENT.md](./AZURE_DEPLOYMENT.md)
-
-**Quick Deploy:**
-```bash
-# 1. Create Azure resources
-az group create --name kanso-rg --location eastus
-az appservice plan create --name kanso-plan --resource-group kanso-rg --sku B1 --is-linux
-az acr create --resource-group kanso-rg --name kansoregistry --sku Basic
-
-# 2. Build and push Docker image
-docker build -t kansoregistry.azurecr.io/kanso:latest .
-az acr login --name kansoregistry
-docker push kansoregistry.azurecr.io/kanso:latest
-
-# 3. Deploy to App Service
-az webapp create --name kanso-app --resource-group kanso-rg --plan kanso-plan
-az webapp config container set --name kanso-app --resource-group kanso-rg \
-  --docker-custom-image-name kansoregistry.azurecr.io/kanso:latest
-```
-
-Access your app at: `https://kanso-app.azurewebsites.net`
-
 ## How to Use
 
 1. **Upload Transactions**

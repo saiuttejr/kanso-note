@@ -101,6 +101,13 @@ public class FinanceTrackerService {
         return transactions.size();
     }
 
+    public int clearTransactions() {
+        int clearedCount = transactions.size();
+        transactions.clear();
+        idCounter.set(1);
+        return clearedCount;
+    }
+
     public List<MonthlyTrend> getMonthlyTrends() {
         Map<YearMonth, BigDecimal> incomeByMonth = new LinkedHashMap<>();
         Map<YearMonth, BigDecimal> expenseByMonth = new LinkedHashMap<>();

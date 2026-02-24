@@ -75,6 +75,17 @@ public class DashboardController {
         }
     }
 
+    @PostMapping("/transactions/clear")
+    public String clearTransactions() {
+        int clearedCount = financeTrackerService.clearTransactions();
+        return redirectWithMessage("Cleared " + clearedCount + " transaction(s).");
+    }
+
+    @GetMapping("/transactions/clear")
+    public String clearTransactionsGetFallback() {
+        return redirectWithError("Use the Clear Transaction Data button to submit this action.");
+    }
+
     @PostMapping("/rules")
     public String addRule(@RequestParam("keyword") String keyword,
                           @RequestParam("category") String category) {
