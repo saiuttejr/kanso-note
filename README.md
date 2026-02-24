@@ -98,6 +98,30 @@ This is calculated from currently loaded expense transactions.
 - Rule persistence resets on app restart
 - "Clear Transaction Data" removes all loaded transactions but keeps rules
 
+## Deployment
+
+### Google Cloud Run (Recommended - Free Tier)
+
+Deploy Kanso to Google Cloud Run with automatic scaling and a generous free tier (2M requests/month).
+
+**Quick Start:**
+```bash
+./deploy-to-cloud-run.sh
+```
+
+Or follow the detailed guide: [CLOUD_RUN_DEPLOYMENT.md](CLOUD_RUN_DEPLOYMENT.md)
+
+**Benefits:**
+- ✅ Completely free for typical usage
+- ✅ Auto-scales with traffic
+- ✅ CI/CD integration with Cloud Build
+- ✅ 24/7 uptime with no sleep periods
+- ✅ Easy custom domain setup
+
+**Estimated Cost:** $0-5/month for typical usage
+
+For detailed instructions, see: [CLOUD_RUN_DEPLOYMENT.md](CLOUD_RUN_DEPLOYMENT.md)
+
 ## Suggested Next Iterations
 
 1. Persist data/rules to PostgreSQL.
