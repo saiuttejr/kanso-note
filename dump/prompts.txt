@@ -1,0 +1,118 @@
+--------------------------------------------
+You are a senior backend engineer and code-completion assistant. The repository is a Spring Boot (Java 17, Maven) personal finance tracker (`kanso-note`). The product requirement is explicit: this must be a fully OFFLINE financial analysis tool for beginner banking users. No data leaves the device. Security (privacy by design), simplicity (beginner UX), and explainability (interview-ready) are the priorities, while keeping engineering quality high.
+
+Work incrementally and produce small, easily reviewable commits/files. After generating code for any file, add clear comments above classes/methods explaining the design decision in plain English so an interviewer can ask “why” and you can answer in 1–2 sentences.
+
+Hard constraints (must follow exactly)
+- NO external network calls, SDKs, telemetry, or cloud dependencies anywhere in the code or build scripts.
+- Default runtime persistence must be local (file-based). Use either H2 in file mode or SQLite as the production-like local DB. Use H2 file mode if SQLite drivers are not present.
+- All stored user data (CSV uploads and DB file) must be optionally encryptable with a user-provided passphrase. Implement AES-256 encryption using PBKDF2 (PBKDF2WithHmacSHA256) for key derivation. Add clear comments about key-management tradeoffs (i.e., remembering the passphrase is required; losing it means data is irrecoverable).
+- Minimal, friendly UI (Thymeleaf) for beginners: CSV upload, set passphrase (optional), run categorization, view monthly summary, basic anomaly highlights. Rest APIs may exist for local usage but must be disabled from any external access by default (bind to localhost).
+- No authentication complexity: single-user local app. If authentication is implemented, make it passphrase-only and local-only—no JWT issuance to external services.
+
+Primary deliverables (ordered by priority)
+1. Offline persistence & encryption
+   - Add H2 file-mode configuration (persist to `data/kanson-db.mv.db`) or SQLite.
+   - Implement a small `StorageService` that wraps DB file operations and offers `encryptDatabase(passphrase)` and `decryptDatabase(passphrase)` helper methods. Keep implementation simple and well-commented.
+   - Store uploaded CSV files in a local `data/uploads/` directory with optional AES encryption using derived key from passphrase.
+
+2. Clear layered architecture + separation
+   - Restructure/confirm package layout: `controller`, `service`, `repository`, `model`/`entity`, `dto`, `config`, `exception`, `util`.
+   - Convert current in-memory models to JPA entities (Transaction, Category, Rule, AppUser or Profile).
+   - Use DTOs for controller I/O. Never return JPA entities directly to the view/api.
+
+3. Beginner-focused UX & safe defaults
+   - CSV upload flow that:
+     - Validates CSV columns (date, amount, description).
+     - Parses robustly (handles quotes, commas).
+     - Shows human-friendly error messages in UI.
+     - Default rule set: a small curated set of categories useful for beginner bank users (e.g., groceries, rent, utilities, transport).
+   - Provide a one-click “Run Analysis” button with a short explanation sentence of what analysis does.
+
+4. Rule engine improvement & explainability
+   - Replace brittle keyword-only logic with a deterministic rule engine:
+     - Rules support `patternType` (`KEYWORD` / `REGEX`), `pattern`, `priority` (integer, higher overrides lower), `enabled` boolean.
+     - Rules stored persistently and editable via a simple REST endpoint (local-only) and admin view.
+     - Implement deterministic conflict resolution: choose highest priority; on tie choose longest matching pattern; log chosen rule and why (for interview demonstration).
+   - Add clear method comments explaining why priority + longest-match is chosen.
+
+5. Analytics (local computations only)
+   - Implement monthly aggregation (income vs expense), month-over-month delta, and top-3 spending categories.
+   - Implement anomaly detection: flag transactions > mean + 2*stddev for that category & month. Use streaming JPQL queries or local aggregation depending on performance. Explain the statistical choice in comments.
+   - Expose analytics via a `GET /analytics/monthly` JSON endpoint (bind to localhost) and the Thymeleaf dashboard.
+
+6. Tests & reproducibility
+   - Add unit tests for the rule engine (cover at least: regex match, priority tie resolution, disabled rule).
+   - Add 2 integration tests for CSV upload → categorize flow using MockMvc and H2 test profile.
+   - Provide a sample CSV inside `data/sample-samples/` for quick demo.
+   - Ensure tests run with `mvn -DskipTests=false test`.
+
+7. Documentation & interview prep (mandatory)
+   - README must include:
+     - One-paragraph product pitch emphasizing offline-first & beginner simplicity.
+     - How to run locally step-by-step (include passphrase flow if enabled).
+     - Threat model & security tradeoffs (what encryption protects against and what it does not).
+     - A short “AI usage” section: exactly where Copilot/AI was used (boilerplate, tests scaffolding, suggestions), and exactly what you changed or rejected. Write this in first person so you can say it verbatim in the recruiter call.
+     - A short “Talking points” section with 6 bullet answers to common recruiter prompts:
+       - Explain the product in simple terms (30–60s).
+       - Key design decisions and why.
+       - How I used AI (what it helped with, what I audited/rewrote).
+       - Most interesting technical risk and how I mitigated it.
+       - If they asked for deeper tech: DTO vs entity, transaction boundaries, eager vs lazy fetch — provide 1–2 line answers.
+       - How data remains offline & what the passphrase guarantees.
+
+Non-functional instructions for the generated code
+- Add meaningful SLF4J logging at INFO level for high-level steps and DEBUG for internals (e.g., rule evaluation decision).
+- Use `@ControllerAdvice` for consistent error pages/messages on UI and JSON error responses for API.
+- Keep code simple and avoid clever one-liners. Prioritize readability and explainability.
+- Wherever you add encryption code, include a concise comment explaining the threat model and why we used PBKDF2 + AES.
+
+Scope limits (do not do)
+- Do not add cloud integrations, analytics telemetry, or remote backups.
+- Do not introduce complex multi-user auth or OAuth.
+- Do not attempt to implement advanced ML classifiers — a simple Naive Bayes prototype may be suggested as future work but is out-of-scope.
+
+Output expectations from you (Copilot assistant)
+- For each batch of changes: produce the filenames created/modified and a 1–2 sentence rationale for each file (this will be part of the commit message).
+- For each major design choice (DB choice, encryption approach, rule resolution strategy), add a top-level comment inside the primary class explaining the decision in plain English.
+- Generate unit tests and sample data.
+- Append to README an explicit “AI usage audit” describing which generated snippets were accepted & which were refactored/rejected, so the candidate can explain during the recruiter call.
+
+Developer workflow suggestion:
+Persistence + offline guarantee:
+  - Implement H2 file-mode config
+  - Add entity models and Flyway migration scripts
+  - Add StorageService for DB/file encryption
+
+Layered refactor:
+  - Add DTOs, Services, Repositories, Controller shells
+  - Add global exception handler and logging config
+
+Rule engine:
+  - Implement rule entity + engine + admin endpoints
+  - Add deterministic conflict resolution and logging
+
+Analytics:
+  - Monthly aggregation, anomaly detection, dashboard endpoints
+  - Add sample CSV and one-click demo flow
+
+Tests:
+  - Unit tests for rule engine + MockMvc integration tests
+  - Run and fix failing tests; ensure local reproducibility
+
+Docs & interview prep:
+  - Final README with AI usage audit, threat model, and 30–60s pitch + 6 talking points
+  - Create a simple demo script (5 steps) to run during screen share
+  - Tidy commits and prepare a short “what I built” script to rehearse
+
+Important: keep every change small and well-documented. After each generated file/class, add a 1–2 line comment at the top stating the interview talking point it supports (e.g., “Supports: explainable offline storage / used to demo passphrase encryption”).
+
+If you generate code that uses any cryptographic primitive, include a short comment: “cryptography: this is suitable for demo/offline use; for production key-management consider HSM or OS keystore.”
+
+Do not create any network clients or remote logging. All code must compile and run offline.
+
+If you understand, begin by generating:
+  1) an H2 file-mode configuration and Flyway migration `V1__init.sql` creating tables for Transaction, Category, Rule, and Profile,
+  2) a `StorageService` skeleton (interface + impl) that includes method stubs for `saveCsv`, `listUploads`, `encryptDatabase`, `decryptDatabase`, and the necessary comments about passphrase tradeoffs,
+  3) update `application.properties` profile for offline defaults (H2 file mode, port bound to localhost).
+------------------------------------------------------
