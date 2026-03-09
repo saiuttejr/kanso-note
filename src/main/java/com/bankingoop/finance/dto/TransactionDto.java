@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Supports: clean separation — controllers never expose JPA entities to the view.
- * DTO carries only the fields the dashboard template needs.
+ * DTO for transactions, separating domain entity from view/API representation.
+ * Carries only the fields the dashboard template needs.
  */
 public record TransactionDto(
     Long id,

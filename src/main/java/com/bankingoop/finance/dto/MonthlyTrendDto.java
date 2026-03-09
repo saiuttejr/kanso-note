@@ -5,7 +5,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Supports: monthly trend display on the dashboard with MoM delta + rolling average.
+ * DTO for monthly income/expense trends with month-over-month delta and rolling average.
  */
 public record MonthlyTrendDto(
     YearMonth month,

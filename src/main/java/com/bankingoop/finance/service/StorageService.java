@@ -8,19 +8,7 @@ import java.security.GeneralSecurityException;
 import java.util.List;
 
 /**
- * Supports: offline file storage & optional passphrase encryption (interview talking point).
- *
- * Design decision — interface-based StorageService:
- *   We define storage operations behind an interface so the controller never knows
- *   whether files are encrypted or plain. This keeps the encryption concern isolated
- *   and makes it easy to swap implementations (e.g., for testing with a temp directory).
- *
- * Passphrase tradeoffs (key-management):
- *   - The passphrase is the ONLY key material. It is never stored on disk.
- *   - Losing the passphrase means encrypted data is irrecoverable — there is no
- *     "forgot password" or recovery flow. This is intentional for simplicity.
- *   - We derive the AES key each time via PBKDF2 (expensive but safe).
- *   - For production key-management consider HSM or OS keystore.
+ * Service for offline file storage and optional passphrase encryption.
  */
 public interface StorageService {
 

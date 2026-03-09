@@ -3,13 +3,7 @@ package com.bankingoop.finance.dto;
 import java.math.BigDecimal;
 
 /**
- * Budget status DTO — combines a budget with its real-time spending data.
- *
- * Design decision — precomputed status:
- *   We compute the spent amount, utilization percentage, and alert level
- *   in the service layer and pass the result to the view. This keeps the
- *   template logic simple and the status easy to test.
- */
+ * Budget status DTO combining budget with real-time spending data and alert status.\n */
 public record BudgetStatusDto(
     Long budgetId,
     String category,

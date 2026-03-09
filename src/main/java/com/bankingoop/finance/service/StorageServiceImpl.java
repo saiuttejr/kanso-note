@@ -21,23 +21,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Supports: offline file persistence with optional AES-256 encryption (interview talking point).
- *
- * Design decision — local file system storage:
- *   All uploaded CSVs and DB backups live under ./data/ on the user's machine.
- *   No cloud storage, no remote calls. The directory is created on first use.
- *
- * Encryption approach:
- *   When a passphrase is supplied, we use PBKDF2 to derive a 256-bit AES-GCM key.
- *   Each file gets a unique random salt + IV prepended to the ciphertext.
- *   The passphrase itself is NEVER stored on disk — the user must remember it.
- *
- * Key-management tradeoff:
- *   Losing the passphrase = losing the data. There is no recovery mechanism.
- *   This is acceptable for a single-user offline app where simplicity > enterprise key mgmt.
- *
- * cryptography: this is suitable for demo/offline use; for production key-management
- * consider HSM or OS keystore.
+ * Offline file persistence with optional AES-256 encryption.
  */
 @Service
 public class StorageServiceImpl implements StorageService {
@@ -57,15 +41,6 @@ public class StorageServiceImpl implements StorageService {
         log.info("StorageService initialised — uploads: {}, db: {}", this.uploadDir, this.dbPath);
     }
 
-    // -----------------------------------------------------------------------
-    // CSV upload operations
-    // -----------------------------------------------------------------------
-
-    /**
-     * Saves an uploaded CSV. If passphrase is non-null, encrypts the file contents
-     * using AES-256-GCM before writing.
-     * File naming: {timestamp}_{original-name}[.enc]
-     */
     @Override
     public Path saveCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException {
         if (file == null || file.isEmpty()) {
@@ -138,20 +113,6 @@ public class StorageServiceImpl implements StorageService {
         return raw;
     }
 
-    // -----------------------------------------------------------------------
-    // Database encryption operations
-    // -----------------------------------------------------------------------
-
-    /**
-     * Encrypts a copy of the H2 database file.
-     *
-     * Implementation note: H2 in AUTO_SERVER mode locks the .mv.db file while
-     * the app is running. We read a snapshot and write it encrypted to a .enc file.
-     * To fully encrypt the live DB, the app would need to shut down first.
-     * This is acceptable for a demo/offline app.
-     *
-     * cryptography: suitable for demo/offline use; for production consider HSM or OS keystore.
-     */
     @Override
     public void encryptDatabase(char[] passphrase) throws IOException, GeneralSecurityException {
         if (passphrase == null || passphrase.length == 0) {
@@ -171,12 +132,6 @@ public class StorageServiceImpl implements StorageService {
         log.info("Database backup encrypted → {}", encFile.getFileName());
     }
 
-    /**
-     * Decrypts a previously encrypted database backup.
-     *
-     * WARNING: wrong passphrase → AES-GCM tag mismatch → GeneralSecurityException.
-     * Data encrypted with a forgotten passphrase is irrecoverable — by design.
-     */
     @Override
     public void decryptDatabase(char[] passphrase) throws IOException, GeneralSecurityException {
         if (passphrase == null || passphrase.length == 0) {
@@ -198,10 +153,6 @@ public class StorageServiceImpl implements StorageService {
         log.info("Database backup decrypted → {}", restoredFile.getFileName());
     }
 
-    // -----------------------------------------------------------------------
-    // Internal helpers
-    // -----------------------------------------------------------------------
-
     private Path resolveDbFile() {
         // H2 appends .mv.db to the configured path
         Path mvDb = Paths.get(dbPath + ".mv.db");
@@ -212,10 +163,6 @@ public class StorageServiceImpl implements StorageService {
         return dbPath;
     }
 
-    /**
-     * Sanitizes the uploaded file name to prevent path traversal.
-     * Strips directory components and replaces unsafe characters.
-     */
     private String sanitizeFileName(String originalName) {
         if (originalName == null || originalName.isBlank()) {
             return "upload.csv";

@@ -30,13 +30,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * RESTful API controller — JSON endpoints for programmatic access.
- *
- * Design decision — separate REST controller:
- *   The existing DashboardController serves Thymeleaf views. This controller
- *   provides a parallel REST API documented with OpenAPI/Swagger, enabling
- *   future mobile clients, third-party integrations, or a SPA frontend.
- *   This demonstrates proper API design: resource-oriented URIs, standard
- *   HTTP methods, appropriate status codes, and content negotiation.
  */
 @RestController
 @RequestMapping("/api/v1")
@@ -54,10 +47,6 @@ public class ApiController {
         this.budgetService = budgetService;
         this.auditService = auditService;
     }
-
-    // -----------------------------------------------------------------------
-    // Transactions
-    // -----------------------------------------------------------------------
 
     @GetMapping("/transactions")
     @Operation(summary = "List transactions", description = "Returns all transactions, optionally filtered by date range")
@@ -96,10 +85,6 @@ public class ApiController {
         financeTrackerService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
-
-    // -----------------------------------------------------------------------
-    // Analytics
-    // -----------------------------------------------------------------------
 
     @GetMapping("/analytics/summary")
     @Operation(summary = "Get analytics summary", description = "Comprehensive financial analytics including trends, anomalies, and savings rate")
@@ -142,11 +127,7 @@ public class ApiController {
         return ResponseEntity.ok(financeTrackerService.getTopCategories(limit));
     }
 
-    // -----------------------------------------------------------------------
-    // Budgets
-    // -----------------------------------------------------------------------
-
-    @GetMapping("/budgets")
+    @PostMapping("/transactions")
     @Operation(summary = "List budgets", description = "Returns all enabled budgets")
     public ResponseEntity<List<BudgetDto>> getBudgets() {
         return ResponseEntity.ok(budgetService.getAllBudgets());
@@ -182,10 +163,6 @@ public class ApiController {
         return ResponseEntity.noContent().build();
     }
 
-    // -----------------------------------------------------------------------
-    // Rules
-    // -----------------------------------------------------------------------
-
     @GetMapping("/rules")
     @Operation(summary = "List categorization rules")
     public ResponseEntity<Map<String, List<CategoryRuleDto>>> getRules() {
@@ -201,20 +178,12 @@ public class ApiController {
         return ResponseEntity.ok(financeTrackerService.suggestRules());
     }
 
-    // -----------------------------------------------------------------------
-    // Audit
-    // -----------------------------------------------------------------------
-
-    @GetMapping("/audit")
+    @GetMapping("/unusual")
     @Operation(summary = "Recent activity", description = "Returns the most recent audit log entries")
     public ResponseEntity<List<AuditLogDto>> getRecentActivity(
             @RequestParam(defaultValue = "50") int limit) {
         return ResponseEntity.ok(auditService.getRecentActivity(limit));
     }
-
-    // -----------------------------------------------------------------------
-    // Request DTOs (inner records)
-    // -----------------------------------------------------------------------
 
     public record CreateTransactionRequest(
             LocalDate date, String description, BigDecimal amount, String category) {}

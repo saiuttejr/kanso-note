@@ -16,12 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Web security configuration — CORS policy and security headers.
- *
- * Design decision — defense-in-depth headers:
- *   Even though this is a localhost app, we set security headers as a best practice.
- *   This demonstrates awareness of OWASP security guidelines and makes the app
- *   production-ready if ever deployed to the cloud.
+ * Web security configuration with CORS policy and security headers.
  */
 @Configuration
 public class WebSecurityConfig implements WebMvcConfigurer {

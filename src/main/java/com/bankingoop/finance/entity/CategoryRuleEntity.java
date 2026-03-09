@@ -11,13 +11,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 /**
- * Supports: deterministic rule engine with priority + regex (interview talking point).
- *
- * Design decision — persistent rules with priority and pattern type:
- *   Rules are stored in H2 so custom rules survive restarts. The priority integer
- *   and pattern_type (KEYWORD vs REGEX) enable deterministic conflict resolution:
- *   highest priority wins; on tie, longest matching pattern wins.
- *   The is_default flag separates seed data from user-created rules.
+ * Persistent categorization rule with priority and pattern type.
  */
 @Entity
 @Table(name = "category_rule")

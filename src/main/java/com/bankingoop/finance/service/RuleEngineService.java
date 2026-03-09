@@ -22,20 +22,7 @@ import com.bankingoop.finance.repository.CategoryRuleRepository;
 import com.bankingoop.finance.repository.TransactionRepository;
 
 /**
- * Supports: deterministic rule engine with explainability (interview talking point).
- *
- * Design decision — priority + longest-match conflict resolution:
- *   When multiple rules match a description, we pick the one with the highest priority
- *   integer. On a tie, the longest matching pattern wins because a longer pattern is
- *   more specific (e.g. "uber eats" should beat "uber" for food delivery charges).
- *   This is deterministic and easy to explain in an interview: "highest priority,
- *   then most specific match."
- *
- *   We support two pattern types:
- *   - KEYWORD: case-insensitive substring match (simple, beginner-friendly)
- *   - REGEX: Java regex pattern (power-user, for complex matching)
- *
- *   Every rule evaluation decision is logged at DEBUG level for explainability.
+ * Deterministic rule engine for transaction categorization.
  */
 @Service
 public class RuleEngineService {
@@ -212,15 +199,10 @@ public class RuleEngineService {
                 .stream().map(CategoryRuleDto::from).toList();
     }
 
-    // --- Auto-suggest rules from uncategorized transactions (D18) ---
+    // --- Auto-suggest rules from uncategorized transactions ---
 
     /**
-     * Supports: auto-suggest rules from uncategorized transactions (interview talking point).
-     *
-     * Design decision: we extract the longest common keyword from groups of uncategorized
-     * transaction descriptions. If 2+ transactions share a keyword (first meaningful word
-     * ≥ 3 chars), we suggest it as a rule. This helps beginners quickly categorise
-     * without writing patterns manually.
+     * Suggests categorization rules from uncategorized transaction descriptions.
      */
     public List<RuleSuggestionDto> suggestRules() {
         List<String> descriptions = transactionRepository.findDistinctUncategorizedDescriptions();

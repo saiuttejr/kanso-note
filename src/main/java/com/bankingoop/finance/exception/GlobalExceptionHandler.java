@@ -13,12 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
 /**
- * Centralized exception handling for both REST API and Thymeleaf controllers.
- *
- * Design decision — @ControllerAdvice:
- *   A single exception handler translates domain exceptions into appropriate
- *   HTTP responses (404, 409, 400, 500). This keeps controllers clean and
- *   ensures consistent error formatting across the entire application.
+ * Centralized exception handling for REST API and web controllers.
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {

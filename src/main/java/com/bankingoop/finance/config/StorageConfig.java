@@ -12,14 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Supports: offline persistence guarantee (interview talking point).
- *
- * Design decision — eagerly create data directories on startup:
- *   This avoids file-not-found errors on first CSV upload or DB access.
- *   Keeping directory setup in a @Configuration class keeps it out of
- *   business logic and makes it obvious during code review.
- *
- * All paths are local (./data/...). No network or cloud paths are used.
+ * Configuration for offline file storage and directory initialization.
  */
 @Configuration
 public class StorageConfig {

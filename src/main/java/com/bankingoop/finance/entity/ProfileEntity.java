@@ -12,12 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 /**
- * Supports: single-user offline profile with optional encryption salt (interview talking point).
- *
- * Design decision — single profile row:
- *   This is a single-user local app, so we store one profile row with display name
- *   and optional encryption salt. The salt is stored as hex when the user enables
- *   passphrase encryption. No multi-user auth complexity.
+ * Single-user offline profile with display name and optional encryption salt.
  */
 @Entity
 @Table(name = "profile")

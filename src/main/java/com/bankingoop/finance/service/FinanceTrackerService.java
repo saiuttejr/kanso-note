@@ -29,12 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Supports: core orchestrator — ties together CSV import, rule engine, persistence, and analytics.
- *
- * Design decision — JPA-backed persistence:
- *   All transactions are now stored in the local H2 file database instead of an in-memory
- *   list, so data survives restarts. The service delegates categorisation to RuleEngineService
- *   and file operations to StorageService.
+ * Core orchestrator for transaction management, CSV import, and analytics.
  */
 @Service
 public class FinanceTrackerService {
@@ -68,10 +63,6 @@ public class FinanceTrackerService {
         this.eventPublisher = eventPublisher;
         this.budgetService = budgetService;
     }
-
-    // -----------------------------------------------------------------------
-    // Transaction CRUD
-    // -----------------------------------------------------------------------
 
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
@@ -139,10 +130,6 @@ public class FinanceTrackerService {
         log.info("Deleted transaction #{}", id);
     }
 
-    // -----------------------------------------------------------------------
-    // CSV Import with StorageService integration (A2)
-    // -----------------------------------------------------------------------
-
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importFromCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException {
@@ -204,10 +191,6 @@ public class FinanceTrackerService {
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Queries
-    // -----------------------------------------------------------------------
-
     public List<TransactionDto> getTransactions() {
         return transactionRepository.findAllByOrderByDateDescIdDesc()
                 .stream().map(TransactionDto::from).toList();
@@ -258,18 +241,6 @@ public class FinanceTrackerService {
         return count;
     }
 
-    // -----------------------------------------------------------------------
-    // Analytics (B4-7): Monthly trends with MoM delta + rolling avg + savings rate
-    // -----------------------------------------------------------------------
-
-    /**
-     * Supports: monthly aggregation with MoM delta and 3-month rolling average (interview talking point).
-     *
-     * Design decision — local computation:
-     *   We compute everything in Java from the full transaction list rather than
-     *   JPQL aggregation. For a single-user app with < 100K transactions this is
-     *   fast enough and keeps the code simple and testable.
-     */
     @Cacheable("monthlyTrends")
     public List<MonthlyTrendDto> getMonthlyTrends() {
         List<TransactionEntity> all = transactionRepository.findAll();
@@ -382,18 +353,6 @@ public class FinanceTrackerService {
         return "danger";
     }
 
-    // -----------------------------------------------------------------------
-    // Anomaly detection (existing, adapted for JPA)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Supports: anomaly detection using mean + 2σ (interview talking point).
-     *
-     * Design decision — statistical threshold:
-     *   We flag expenses > mean + 2×stddev. This catches ~2.5% of transactions
-     *   in a normal distribution, surfacing genuinely unusual spending.
-     *   The $20 floor avoids noise from tiny transactions.
-     */
     public List<UnusualTransactionDto> detectUnusualTransactions() {
         List<TransactionEntity> expenses = transactionRepository.findAllExpenses();
         if (expenses.size() < 5) return List.of();
@@ -419,17 +378,6 @@ public class FinanceTrackerService {
                 .toList();
     }
 
-    // -----------------------------------------------------------------------
-    // Recurring transaction detection (C9)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Supports: recurring transaction detection (interview talking point).
-     *
-     * Design decision: group transactions by normalised description + approximate amount
-     * (within 5% tolerance). If a description appears in ≥ 2 distinct months with
-     * similar amounts, mark it as recurring. This catches rent, salary, subscriptions.
-     */
     @Cacheable("recurringTransactions")
     public List<RecurringTransactionDto> detectRecurringTransactions() {
         List<TransactionEntity> all = transactionRepository.findAll();
@@ -477,16 +425,6 @@ public class FinanceTrackerService {
         return result;
     }
 
-    // -----------------------------------------------------------------------
-    // Undo (E23)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Supports: single-step undo of the last add/import action (interview talking point).
-     *
-     * Design decision: we store only the IDs added by the last action. Undo deletes them.
-     * This is simpler than a full command pattern but sufficient for a beginner UX.
-     */
     @Transactional
     public String undoLastAction() {
         if (lastAddedIds.isEmpty()) {
@@ -508,10 +446,6 @@ public class FinanceTrackerService {
         return lastActionDescription;
     }
 
-    // -----------------------------------------------------------------------
-    // Rule delegation
-    // -----------------------------------------------------------------------
-
     public void addRule(String keyword, String category) {
         ruleEngineService.addCustomRule(keyword, category);
     }
@@ -532,13 +466,6 @@ public class FinanceTrackerService {
         return ruleEngineService.suggestRules();
     }
 
-    // -----------------------------------------------------------------------
-    // Export (C11)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Exports transactions as CSV string. Supports optional date range filter (C12).
-     */
     public String exportToCsv(LocalDate from, LocalDate to) {
         List<TransactionDto> transactions = getTransactions(from, to);
         StringBuilder sb = new StringBuilder();

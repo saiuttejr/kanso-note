@@ -1,7 +1,7 @@
 package com.bankingoop.finance.dto;
 
 /**
- * Supports: DTO for category rules displayed in the UI and REST endpoints.
+ * DTO for category rules displayed in UI and REST endpoints.
  * Exposes only what the view needs: pattern info, category, priority, and type.
  */
 public record CategoryRuleDto(

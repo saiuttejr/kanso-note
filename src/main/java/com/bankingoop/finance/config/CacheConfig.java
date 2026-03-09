@@ -13,17 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 /**
- * Cache configuration using Caffeine — high-performance in-memory caching.
- *
- * Design decision — cache analytics, not transactions:
- *   We cache expensive analytics computations (monthly trends, anomaly detection)
- *   that read all transactions but change infrequently. Transaction CRUD operations
- *   evict the relevant caches to ensure consistency.
- *
- *   Caffeine was chosen over simple ConcurrentHashMap because it provides:
- *   - Size-based eviction (maximumSize)
- *   - Time-based expiration (expireAfterWrite)
- *   - Statistics recording for monitoring
+ * In-memory caching configuration using Caffeine for analytics computations.
  */
 @Configuration
 @EnableCaching

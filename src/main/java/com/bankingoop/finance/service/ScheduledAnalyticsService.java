@@ -13,13 +13,7 @@ import com.bankingoop.finance.dto.BudgetStatusDto;
 import com.bankingoop.finance.dto.UnusualTransactionDto;
 
 /**
- * Scheduled analytics service — runs periodic background tasks.
- *
- * Design decision — @Scheduled for proactive monitoring:
- *   Rather than computing analytics only on dashboard load, this service
- *   runs periodic checks to proactively identify budget overruns and
- *   spending anomalies. This demonstrates familiarity with Spring's
- *   task scheduling infrastructure and background processing patterns.
+ * Scheduled analytics service for proactive monitoring of budgets and anomalies.
  */
 @Service
 public class ScheduledAnalyticsService {

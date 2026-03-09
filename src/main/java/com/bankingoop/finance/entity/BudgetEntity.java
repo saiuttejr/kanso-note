@@ -14,13 +14,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 /**
- * Budget entity — per-category monthly spending limit.
- *
- * Design decision — category-level budgets:
- *   Each budget is tied to a spending category (e.g., "Groceries", "Dining").
- *   The alert_threshold (default 80%) triggers a warning when spending
- *   approaches the limit. This two-tier system gives users early warning
- *   before actually exceeding their budget.
+ * Budget entity with per-category monthly spending limit and alert threshold.
  */
 @Entity
 @Table(name = "budget", indexes = {

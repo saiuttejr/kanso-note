@@ -3,7 +3,7 @@ package com.bankingoop.finance.dto;
 import java.math.BigDecimal;
 
 /**
- * Supports: recurring transaction detection (C9).
+ * DTO for recurring transaction patterns based on description and amount similarity.
  * Groups transactions that appear at roughly the same amount on the same day each month.
  */
 public record RecurringTransactionDto(

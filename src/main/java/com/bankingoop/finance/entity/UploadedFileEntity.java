@@ -11,10 +11,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 /**
- * Supports: audit trail for CSV uploads (interview talking point).
- *
- * Tracks every uploaded CSV with original name, stored path, encryption status,
- * and row count. Useful for re-import and demonstrating data lineage.
+ * Audit trail for CSV uploads with file metadata and encryption status.
  */
 @Entity
 @Table(name = "uploaded_file")

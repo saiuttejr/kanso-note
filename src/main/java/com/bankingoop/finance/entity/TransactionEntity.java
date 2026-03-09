@@ -14,13 +14,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 /**
- * Supports: offline persistence — transactions survive app restarts (interview talking point).
- *
- * Design decision — JPA entity backed by H2 file-mode:
- *   We store every transaction in a local H2 database file so data persists across
- *   restarts without any cloud dependency. The matched_rule_id column links to the
- *   rule that categorised this transaction, enabling explainability ("why was this
- *   categorised as Groceries?").
+ * Transaction entity persisted to local H2 database with category mapping.
  */
 @Entity
 @Table(name = "transaction", indexes = {

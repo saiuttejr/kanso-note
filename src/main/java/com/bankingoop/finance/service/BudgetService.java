@@ -25,16 +25,7 @@ import com.bankingoop.finance.repository.BudgetRepository;
 import com.bankingoop.finance.repository.TransactionRepository;
 
 /**
- * Budget management service — per-category spending limits with real-time monitoring.
- *
- * Design decision — two-tier alerting:
- *   Each budget has a configurable alert threshold (default 80%). When current-month
- *   spending crosses the threshold, the status becomes "warning". When it exceeds
- *   the monthly limit, the status becomes "exceeded". This gives users early warning
- *   before actually going over budget.
- *
- *   Budget checks are triggered reactively via Spring Events when transactions are
- *   created/updated, keeping the budget logic decoupled from the core transaction flow.
+ * Budget management service with per-category spending limits and alerts.
  */
 @Service
 public class BudgetService {

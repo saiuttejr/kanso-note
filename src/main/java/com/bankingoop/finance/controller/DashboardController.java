@@ -38,10 +38,6 @@ public class DashboardController {
         this.auditService = auditService;
     }
 
-    // -----------------------------------------------------------------------
-    // Dashboard (with date range filtering C12)
-    // -----------------------------------------------------------------------
-
     @GetMapping("/")
     public String dashboard(@RequestParam(value = "message", required = false) String message,
                             @RequestParam(value = "error", required = false) String error,
@@ -67,10 +63,6 @@ public class DashboardController {
 
         return "dashboard";
     }
-
-    // -----------------------------------------------------------------------
-    // Transaction CRUD
-    // -----------------------------------------------------------------------
 
     @PostMapping("/transactions/manual")
     public String addManualTransaction(@RequestParam("date") String date,
@@ -121,10 +113,6 @@ public class DashboardController {
         }
     }
 
-    // -----------------------------------------------------------------------
-    // CSV Import
-    // -----------------------------------------------------------------------
-
     @PostMapping("/transactions/upload")
     public String uploadTransactions(@RequestParam("file") MultipartFile file) {
         try {
@@ -158,10 +146,6 @@ public class DashboardController {
         return redirectWithError("Use the Clear Transaction Data button to submit this action.");
     }
 
-    // -----------------------------------------------------------------------
-    // Undo (E23)
-    // -----------------------------------------------------------------------
-
     @PostMapping("/transactions/undo")
     public String undoLastAction() {
         String result = financeTrackerService.undoLastAction();
@@ -170,10 +154,6 @@ public class DashboardController {
         }
         return redirectWithError("Nothing to undo.");
     }
-
-    // -----------------------------------------------------------------------
-    // Rules (D15, D16, D18)
-    // -----------------------------------------------------------------------
 
     @PostMapping("/rules")
     public String addRule(@RequestParam("pattern") String pattern,
@@ -187,10 +167,6 @@ public class DashboardController {
             return redirectWithError(ex.getMessage());
         }
     }
-
-    // -----------------------------------------------------------------------
-    // Export CSV (C11)
-    // -----------------------------------------------------------------------
 
     @GetMapping("/export/csv")
     public ResponseEntity<byte[]> exportCsv(
@@ -207,10 +183,6 @@ public class DashboardController {
                 .contentLength(csvBytes.length)
                 .body(csvBytes);
     }
-
-    // -----------------------------------------------------------------------
-    // Budgets
-    // -----------------------------------------------------------------------
 
     @PostMapping("/budgets")
     public String addBudget(@RequestParam("category") String category,
@@ -237,10 +209,6 @@ public class DashboardController {
             return redirectWithError(ex.getMessage());
         }
     }
-
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
 
     private void populateModel(Model model, LocalDate from, LocalDate to) {
         boolean filtered = from != null || to != null;

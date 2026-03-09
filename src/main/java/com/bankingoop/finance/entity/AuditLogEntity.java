@@ -12,13 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 /**
- * Immutable audit log entry — records every significant user action.
- *
- * Design decision — event sourcing lite:
- *   Rather than full event sourcing, we use a simple append-only audit log
- *   that captures the event type, affected entity, and human-readable details.
- *   This enables compliance reporting, debugging, and activity dashboards
- *   without the complexity of a full CQRS/ES architecture.
+ * Immutable audit log entry recording all significant user actions.
  */
 @Entity
 @Table(name = "audit_log", indexes = {

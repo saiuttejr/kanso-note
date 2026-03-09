@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.bankingoop.finance.entity.CategoryRuleEntity;
 
 /**
- * Supports: persistent rule storage so custom rules survive restarts.
+ * Repository for persistent rule storage and retrieval.
  */
 @Repository
 public interface CategoryRuleRepository extends JpaRepository<CategoryRuleEntity, Long> {

@@ -1,7 +1,7 @@
 package com.bankingoop.finance.dto;
 
 /**
- * Supports: auto-suggest rules (D18) — groups uncategorized descriptions and suggests a rule.
+ * DTO for auto-suggested rules based on uncategorized transaction clusters.
  */
 public record RuleSuggestionDto(
     String pattern,

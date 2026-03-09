@@ -19,16 +19,7 @@ import com.bankingoop.finance.event.TransactionEvent;
 import com.bankingoop.finance.repository.AuditLogRepository;
 
 /**
- * Audit service — event-driven, append-only activity log.
- *
- * Design decision — event listeners for decoupled auditing:
- *   The audit service listens to Spring Application Events (TransactionEvent,
- *   BudgetEvent) and records them in an immutable audit_log table. This means
- *   the core business services don't need to know about auditing at all —
- *   adding or removing audit logging requires zero changes to FinanceTrackerService.
- *
- *   The @Async annotation on event handlers ensures audit writes don't slow
- *   down the user-facing request path.
+ * Event-driven audit service recording activity to append-only log.
  */
 @Service
 public class AuditService {

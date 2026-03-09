@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.bankingoop.finance.entity.TransactionEntity;
 
 /**
- * Supports: persistent transaction storage in local H2 file database.
+ * Repository for transaction persistence in local H2 database.
  */
 @Repository
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {

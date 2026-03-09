@@ -18,30 +18,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
 /**
- * Supports: offline passphrase-based encryption (interview talking point).
- *
- * Design decision — PBKDF2 + AES-256-GCM:
- *   We derive a 256-bit key from the user's passphrase using PBKDF2WithHmacSHA256
- *   (600 000 iterations as of OWASP 2023 guidance) so the key never leaves RAM and
- *   never touches the network. AES-GCM provides authenticated encryption (integrity +
- *   confidentiality). A random 16-byte salt and 12-byte IV are prepended to every
- *   ciphertext so each encryption produces unique output even for identical input.
- *
- * Threat model:
- *   - Protects data-at-rest if the device is lost or the DB file is copied.
- *   - Does NOT protect against a running attacker with full OS access (they can read
- *     heap memory while the app has the key loaded).
- *   - The passphrase is the single point of trust: losing it means data is
- *     irrecoverable. There is no "forgot password" flow — by design, for simplicity.
- *
- * Key-management tradeoff:
- *   We deliberately avoid storing the derived key anywhere. The user must supply the
- *   passphrase every time encryption/decryption is needed. This is the simplest
- *   model for a single-user offline app and avoids the complexity of OS keystore
- *   integration. For production key-management consider HSM or OS keystore.
- *
- * cryptography: this is suitable for demo/offline use; for production key-management
- * consider HSM or OS keystore.
+ * Offline passphrase-based encryption using PBKDF2 + AES-256-GCM.
  */
 public final class EncryptionUtil {
 
