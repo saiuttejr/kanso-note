@@ -6,6 +6,7 @@
     --line: #dde3ec;
     --ok: #18794e;
     --warn: #bf2600;
+    --warning-mid: #b5850b;
     --primary: #0f4c81;
 }
 
@@ -84,17 +85,59 @@ body {
     border: 1px solid #f5c2b8;
 }
 
+/* Onboarding Wizard (E20) */
+.onboarding {
+    margin-bottom: 14px;
+}
+
+.onboarding-card {
+    border-left: 4px solid var(--ok);
+    background: linear-gradient(135deg, #e9f8f1 0%, #f6fff9 100%);
+}
+
+.onboarding-steps {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.onboarding-steps li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.onboarding-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* Undo Banner (E23) */
+.undo-banner {
+    margin-bottom: 14px;
+}
+
+.undo-card {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff8e1;
+    border-left: 4px solid var(--warning-mid);
+    padding: 10px 14px;
+}
+
 .summary-grid,
 .inputs,
 .insights,
-.transactions {
+.transactions,
+.top-categories {
     display: grid;
     gap: 14px;
     margin-bottom: 14px;
 }
 
 .summary-grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .inputs {
@@ -129,6 +172,33 @@ body {
     font-weight: 700;
 }
 
+/* Top Categories (B5) */
+.category-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.category-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.category-label {
+    min-width: 120px;
+    font-weight: 500;
+}
+
+.category-amount {
+    font-weight: 700;
+    min-width: 80px;
+}
+
+.category-count {
+    font-size: 0.82rem;
+}
+
 form {
     display: grid;
     gap: 7px;
@@ -141,7 +211,9 @@ label {
 
 input[type="text"],
 input[type="date"],
-input[type="file"] {
+input[type="file"],
+input[type="number"],
+select {
     width: 100%;
     border: 1px solid #cfd7e4;
     border-radius: 8px;
@@ -175,15 +247,36 @@ button.danger {
     margin-top: 8px;
 }
 
+button.small {
+    padding: 5px 10px;
+    font-size: 0.82rem;
+    margin-top: 0;
+}
+
 .hint {
     font-size: 0.82rem;
     color: var(--muted);
     margin: 10px 0 2px;
 }
 
+.warning-text {
+    color: var(--warning-mid);
+    font-weight: 600;
+}
+
 .rules {
     margin: 8px 0 0;
     padding-left: 18px;
+}
+
+.rule-type {
+    font-size: 0.75rem;
+    background: #edf1f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 details {
@@ -194,6 +287,71 @@ summary {
     cursor: pointer;
     color: var(--primary);
     font-size: 0.88rem;
+}
+
+/* Filter form (C12) */
+.filter-form {
+    display: flex;
+    gap: 8px;
+    align-items: end;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.filter-form label {
+    margin-bottom: 0;
+}
+
+.filter-form input[type="date"] {
+    width: auto;
+    min-width: 140px;
+}
+
+/* Export bar (C11) */
+.export-bar {
+    margin-bottom: 10px;
+}
+
+.btn-export {
+    display: inline-block;
+    background: var(--primary);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.btn-export:hover {
+    opacity: 0.9;
+}
+
+/* Inline edit (E22) */
+.edit-row td {
+    background: #f8f9fc;
+    padding: 10px;
+}
+
+.inline-edit-form {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.inline-edit-form input {
+    width: auto;
+    min-width: 100px;
+    flex: 1;
+}
+
+.actions-cell {
+    white-space: nowrap;
+}
+
+.actions-cell form {
+    display: inline;
 }
 
 table {

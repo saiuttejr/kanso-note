@@ -18,11 +18,42 @@
         <p style="font-size: 0.9em; color: #666;">By Sai Uttej R</p>
     </section>
 
+    <!-- Alerts -->
     <section class="alerts">
         <p class="success" th:if="${message}" th:text="${message}"></p>
         <p class="error" th:if="${error}" th:text="${error}"></p>
     </section>
 
+    <!-- Onboarding Wizard (E20) — shown only on first use -->
+    <section th:if="${isFirstUse}" class="onboarding">
+        <article class="card onboarding-card">
+            <h2>Welcome to Kanso!</h2>
+            <p>Get started in 3 easy steps:</p>
+            <ol class="onboarding-steps">
+                <li><strong>Load sample data</strong> to explore the dashboard, or upload your own CSV.</li>
+                <li><strong>Review auto-categorized</strong> transactions &mdash; the rule engine handles most categories.</li>
+                <li><strong>Add custom rules</strong> for any merchants the engine missed.</li>
+            </ol>
+            <div class="onboarding-actions">
+                <form method="post" th:action="@{/transactions/load-sample}" style="display:inline;">
+                    <button type="submit">Load Sample Data</button>
+                </form>
+                <span class="hint">or upload a CSV below</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- Undo Banner (E23) -->
+    <section th:if="${canUndo}" class="undo-banner">
+        <article class="card undo-card">
+            <span th:text="'Last action: ' + ${lastAction}"></span>
+            <form method="post" th:action="@{/transactions/undo}" style="display:inline; margin-left:12px;">
+                <button type="submit" class="secondary small">Undo</button>
+            </form>
+        </article>
+    </section>
+
+    <!-- Summary Stats -->
     <section class="summary-grid">
         <article class="card stat">
             <h2>Transactions</h2>
@@ -41,24 +72,41 @@
             <p class="value" th:classappend="${netPositive ? 'income' : 'expense'}"
                th:text="${'$' + netFlow}"></p>
         </article>
+        <!-- Savings Rate (B7) -->
+        <article class="card stat" th:if="${savingsRate != null}">
+            <h2>Savings Rate</h2>
+            <p class="value" th:classappend="${savingsRateLevel == 'good' ? 'income' : (savingsRateLevel == 'danger' ? 'expense' : 'warning-text')}"
+               th:text="${savingsRate + '%'}"></p>
+        </article>
     </section>
 
+    <!-- Top Spending Categories (B5) -->
+    <section th:if="${!#lists.isEmpty(topCategories)}" class="top-categories">
+        <article class="card">
+            <h2>Top Spending Categories</h2>
+            <div class="category-bars">
+                <div th:each="cat : ${topCategories}" class="category-bar-row">
+                    <span class="category-label" th:text="${cat.category()}"></span>
+                    <span class="category-amount expense" th:text="${'$' + cat.amount()}"></span>
+                    <span class="category-count hint" th:text="${cat.transactionCount() + ' txns'}"></span>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <!-- Inputs Section -->
     <section class="inputs">
         <article class="card">
             <h2>Add Transaction</h2>
             <form method="post" th:action="@{/transactions/manual}">
                 <label>Date</label>
                 <input type="date" name="date" th:value="${today}" required>
-
                 <label>Description</label>
                 <input type="text" name="description" placeholder="Coffee shop" required>
-
                 <label>Amount</label>
                 <input type="text" name="amount" placeholder="-8.45 or 2500.00" required>
-
                 <label>Category (optional)</label>
                 <input type="text" name="category" placeholder="Dining">
-
                 <button type="submit">Add Transaction</button>
             </form>
         </article>
@@ -82,22 +130,41 @@
         <article class="card">
             <h2>Add Categorization Rule</h2>
             <form method="post" th:action="@{/rules}">
-                <label>Keyword</label>
-                <input type="text" name="keyword" placeholder="starbucks" required>
-
+                <label>Pattern Type</label>
+                <select name="patternType">
+                    <option value="KEYWORD" selected>Keyword (substring match)</option>
+                    <option value="REGEX">Regex (advanced)</option>
+                </select>
+                <label>Pattern</label>
+                <input type="text" name="pattern" placeholder="starbucks" required>
                 <label>Category</label>
                 <input type="text" name="category" placeholder="Dining" required>
-
+                <label>Priority (higher wins)</label>
+                <input type="number" name="priority" value="10" min="0" max="100">
                 <button type="submit">Save Rule</button>
             </form>
+
+            <!-- Rule suggestions (D18) -->
+            <div th:if="${!#lists.isEmpty(ruleSuggestions)}">
+                <h3>Suggested Rules</h3>
+                <p class="hint">Based on uncategorized transactions:</p>
+                <ul class="rules">
+                    <li th:each="sug : ${ruleSuggestions}">
+                        <code th:text="${sug.pattern()}"></code>
+                        <span class="hint" th:text="${'(' + sug.matchCount() + ' matches)'}"></span>
+                    </li>
+                </ul>
+            </div>
 
             <h3>Custom Rules</h3>
             <ul class="rules">
                 <li th:if="${#lists.isEmpty(customRules)}">No custom rules yet.</li>
                 <li th:each="rule : ${customRules}">
-                    <code th:text="${rule.keyword}"></code>
-                    <span>-></span>
-                    <strong th:text="${rule.category}"></strong>
+                    <span class="rule-type" th:text="${rule.patternType()}"></span>
+                    <code th:text="${rule.pattern()}"></code>
+                    <span>&rarr;</span>
+                    <strong th:text="${rule.category()}"></strong>
+                    <span class="hint" th:text="${'(priority ' + rule.priority() + ')'}"></span>
                 </li>
             </ul>
 
@@ -105,15 +172,16 @@
                 <summary>View default rules</summary>
                 <ul class="rules">
                     <li th:each="rule : ${defaultRules}">
-                        <code th:text="${rule.keyword}"></code>
-                        <span>-></span>
-                        <strong th:text="${rule.category}"></strong>
+                        <code th:text="${rule.pattern()}"></code>
+                        <span>&rarr;</span>
+                        <strong th:text="${rule.category()}"></strong>
                     </li>
                 </ul>
             </details>
         </article>
     </section>
 
+    <!-- Insights Section -->
     <section class="insights">
         <article class="card">
             <h2>Monthly Trends</h2>
@@ -124,18 +192,25 @@
                     <th>Income</th>
                     <th>Expenses</th>
                     <th>Net</th>
+                    <th>MoM &Delta;</th>
+                    <th>3m Avg</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(monthlyTrends)}">
-                    <td colspan="4">No transaction data yet.</td>
+                    <td colspan="6">No transaction data yet.</td>
                 </tr>
                 <tr th:each="trend : ${monthlyTrends}">
-                    <td th:text="${trend.label}"></td>
-                    <td th:text="${'$' + trend.income}"></td>
-                    <td th:text="${'$' + trend.expense}"></td>
-                    <td th:classappend="${trend.positiveNet ? 'income' : 'expense'}"
-                        th:text="${'$' + trend.net}"></td>
+                    <td th:text="${trend.label()}"></td>
+                    <td th:text="${'$' + trend.income()}"></td>
+                    <td th:text="${'$' + trend.expense()}"></td>
+                    <td th:classappend="${trend.positiveNet() ? 'income' : 'expense'}"
+                        th:text="${'$' + trend.net()}"></td>
+                    <td th:if="${trend.momDeltaPercent() != null}"
+                        th:classappend="${trend.momDeltaPercent() > 0 ? 'expense' : 'income'}"
+                        th:text="${trend.momDeltaPercent() + '%'}"></td>
+                    <td th:if="${trend.momDeltaPercent() == null}">&mdash;</td>
+                    <td th:text="${'$' + trend.rollingAvgExpense()}"></td>
                 </tr>
                 </tbody>
             </table>
@@ -157,10 +232,10 @@
                     <td colspan="4">No anomalies detected yet.</td>
                 </tr>
                 <tr th:each="entry : ${unusualTransactions}">
-                    <td th:text="${entry.transaction.date}"></td>
-                    <td th:text="${entry.transaction.description}"></td>
-                    <td class="expense" th:text="${'$' + entry.absoluteAmount}"></td>
-                    <td th:text="${'$' + entry.threshold}"></td>
+                    <td th:text="${entry.transaction().date()}"></td>
+                    <td th:text="${entry.transaction().description()}"></td>
+                    <td class="expense" th:text="${'$' + entry.absoluteAmount()}"></td>
+                    <td th:text="${'$' + entry.threshold()}"></td>
                 </tr>
                 </tbody>
             </table>
@@ -186,11 +261,50 @@
                 </tbody>
             </table>
         </article>
+
+        <!-- Recurring Transactions (C9) -->
+        <article class="card" th:if="${!#lists.isEmpty(recurringTransactions)}">
+            <h2>Recurring Transactions</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Typical Amount</th>
+                    <th>Occurrences</th>
+                    <th>Frequency</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="rec : ${recurringTransactions}">
+                    <td th:text="${rec.description()}"></td>
+                    <td th:text="${'$' + rec.typicalAmount()}"></td>
+                    <td th:text="${rec.occurrenceCount()}"></td>
+                    <td th:text="${rec.frequency()}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
     </section>
 
+    <!-- Transactions with date range filter (C12), edit/delete (E22), export (C11) -->
     <section class="transactions">
         <article class="card">
             <h2>All Transactions</h2>
+            <!-- Date Range Filter (C12) -->
+            <form method="get" th:action="@{/}" class="filter-form">
+                <label>From</label>
+                <input type="date" name="from" th:value="${filterFrom}">
+                <label>To</label>
+                <input type="date" name="to" th:value="${filterTo}">
+                <button type="submit" class="secondary small">Filter</button>
+                <a th:href="@{/}" class="hint" style="align-self:center;">Reset</a>
+            </form>
+
+            <!-- Export button (C11) -->
+            <div class="export-bar">
+                <a th:href="@{/export/csv(from=${filterFrom},to=${filterTo})}" class="btn-export">Export CSV</a>
+            </div>
+
             <table>
                 <thead>
                 <tr>
@@ -198,32 +312,56 @@
                     <th>Description</th>
                     <th>Category</th>
                     <th>Amount</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(transactions)}">
-                    <td colspan="4">No transactions yet.</td>
+                    <td colspan="5">No transactions yet.</td>
                 </tr>
-                <tr th:each="tx : ${transactions}">
-                    <td th:text="${tx.date}"></td>
-                    <td th:text="${tx.description}"></td>
-                    <td th:text="${tx.category}"></td>
-                    <td th:classappend="${tx.income ? 'income' : 'expense'}"
-                        th:text="${'$' + tx.amount}"></td>
+                <tr th:each="tx : ${transactions}" th:id="'tx-' + ${tx.id()}">
+                    <td th:text="${tx.date()}"></td>
+                    <td th:text="${tx.description()}"></td>
+                    <td th:text="${tx.category()}"></td>
+                    <td th:classappend="${tx.income() ? 'income' : 'expense'}"
+                        th:text="${'$' + tx.amount()}"></td>
+                    <td class="actions-cell">
+                        <button type="button" class="small secondary"
+                                th:onclick="'toggleEdit(' + ${tx.id()} + ')'">Edit</button>
+                        <form method="post" th:action="@{/transactions/delete}" style="display:inline;"
+                              onsubmit="return confirm('Delete this transaction?');">
+                            <input type="hidden" name="id" th:value="${tx.id()}">
+                            <button type="submit" class="small danger">Del</button>
+                        </form>
+                    </td>
+                </tr>
+                <!-- Inline edit rows (hidden by default) -->
+                <tr th:each="tx : ${transactions}" th:id="'edit-' + ${tx.id()}" class="edit-row" style="display:none;">
+                    <td colspan="5">
+                        <form method="post" th:action="@{/transactions/edit}" class="inline-edit-form">
+                            <input type="hidden" name="id" th:value="${tx.id()}">
+                            <input type="date" name="date" th:value="${tx.date()}" required>
+                            <input type="text" name="description" th:value="${tx.description()}" required>
+                            <input type="text" name="amount" th:value="${tx.amount()}" required>
+                            <input type="text" name="category" th:value="${tx.category()}">
+                            <button type="submit" class="small">Save</button>
+                            <button type="button" class="small secondary"
+                                    th:onclick="'toggleEdit(' + ${tx.id()} + ')'">Cancel</button>
+                        </form>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </article>
     </section>
 
-    <section class="transactions">
+    <!-- Help / First Use (if not first use, show at bottom) -->
+    <section th:if="${!isFirstUse}" class="transactions">
         <article class="card">
-            <h2>Help / First-Time Use</h2>
-            <p class="hint">
-                New here? You can load sample data to explore trends and anomaly detection before importing your own CSV.
-            </p>
+            <h2>Help</h2>
+            <p class="hint">Load sample data to re-explore trends and anomaly detection.</p>
             <form method="post" th:action="@{/transactions/load-sample}">
-                <button type="submit" class="secondary">Load Sample Data (Optional)</button>
+                <button type="submit" class="secondary">Load Sample Data</button>
             </form>
         </article>
     </section>
@@ -237,12 +375,23 @@
         </div>
         <div class="footer-section">
             <p class="developer-credit">Developed by <strong>Sai Uttej R</strong></p>
-            <p class="version">Version 1.0.0</p>
+            <p class="version">Version 2.0.0</p>
         </div>
         <div class="footer-section">
-            <p class="copyright">© 2026 Kanso. All rights reserved.</p>
+            <p class="copyright">&copy; 2026 Kanso. All rights reserved.</p>
         </div>
     </div>
 </footer>
+
+<script>
+function toggleEdit(id) {
+    var editRow = document.getElementById('edit-' + id);
+    if (editRow.style.display === 'none') {
+        editRow.style.display = 'table-row';
+    } else {
+        editRow.style.display = 'none';
+    }
+}
+</script>
 </body>
 </html>
