@@ -21,6 +21,7 @@ import java.io.IOException;
 @Configuration
 public class WebSecurityConfig implements WebMvcConfigurer {
 
+    /** Configures CORS policy permitting local origin with all HTTP methods and headers. */
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
@@ -35,6 +36,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
         return new CorsFilter(source);
     }
 
+    /** Adds security headers (nosniff, frame options, XSS protection, CSP) to responses. */
     @Bean
     public Filter securityHeadersFilter() {
         return new Filter() {

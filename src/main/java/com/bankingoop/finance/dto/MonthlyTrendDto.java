@@ -17,8 +17,9 @@ public record MonthlyTrendDto(
     BigDecimal momDeltaPercent,     // month-over-month % change in total spend
     BigDecimal rollingAvgExpense    // 3-month rolling average of expenses
 ) {
-    private static final DateTimeFormatter LABEL_FORMAT = DateTimeFormatter.ofPattern("MMM yyyy");
-
+    // Month-year format for display (e.g., "Jan 2025")
+    static final DateTimeFormatter LABEL_FORMAT = DateTimeFormatter.ofPattern("MMM yyyy");
+    /** Factory method to create monthly trend DTO with calculated net flow and formatting. */
     public static MonthlyTrendDto of(YearMonth month, BigDecimal income, BigDecimal expense,
                                      BigDecimal momDeltaPercent, BigDecimal rollingAvgExpense) {
         BigDecimal net = income.subtract(expense);

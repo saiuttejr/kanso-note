@@ -23,6 +23,7 @@ import com.bankingoop.finance.service.AuditService;
 import com.bankingoop.finance.service.BudgetService;
 import com.bankingoop.finance.service.FinanceTrackerService;
 
+// Web controller for HTML dashboard views with transaction, budget, and analytics management.
 @Controller
 public class DashboardController {
 
@@ -30,6 +31,7 @@ public class DashboardController {
     private final BudgetService budgetService;
     private final AuditService auditService;
 
+    // Constructor injecting dependent services.
     public DashboardController(FinanceTrackerService financeTrackerService,
                                BudgetService budgetService,
                                AuditService auditService) {
@@ -38,6 +40,7 @@ public class DashboardController {
         this.auditService = auditService;
     }
 
+    // Renders the main dashboard view with transactions, trends, budgets, and analytics.
     @GetMapping("/")
     public String dashboard(@RequestParam(value = "message", required = false) String message,
                             @RequestParam(value = "error", required = false) String error,
@@ -64,6 +67,7 @@ public class DashboardController {
         return "dashboard";
     }
 
+    // Handles manual transaction entry with date parsing and error messaging.
     @PostMapping("/transactions/manual")
     public String addManualTransaction(@RequestParam("date") String date,
                                        @RequestParam("description") String description,
@@ -83,6 +87,7 @@ public class DashboardController {
         }
     }
 
+    // Updates an existing transaction and persists the changes to the database.
     @PostMapping("/transactions/edit")
     public String editTransaction(@RequestParam("id") Long id,
                                   @RequestParam("date") String date,
@@ -103,6 +108,7 @@ public class DashboardController {
         }
     }
 
+    // Deletes a transaction by its ID with confirmation message.
     @PostMapping("/transactions/delete")
     public String deleteTransaction(@RequestParam("id") Long id) {
         try {
@@ -113,6 +119,7 @@ public class DashboardController {
         }
     }
 
+    // Processes multipart file CSV upload and imports transactions in batch.
     @PostMapping("/transactions/upload")
     public String uploadTransactions(@RequestParam("file") MultipartFile file) {
         try {
@@ -125,6 +132,7 @@ public class DashboardController {
         }
     }
 
+    // Loads predefined sample transaction data for demonstration purposes.
     @PostMapping("/transactions/load-sample")
     public String loadSampleData() {
         try {
@@ -135,17 +143,20 @@ public class DashboardController {
         }
     }
 
+    // Clears all transactions from the database.
     @PostMapping("/transactions/clear")
     public String clearTransactions() {
         int clearedCount = financeTrackerService.clearTransactions();
         return redirectWithMessage("Cleared " + clearedCount + " transaction(s).");
     }
 
+    // Fallback handler for GET request on clear endpoint with error message.
     @GetMapping("/transactions/clear")
     public String clearTransactionsGetFallback() {
         return redirectWithError("Use the Clear Transaction Data button to submit this action.");
     }
 
+    // Undoes the last finance operation and restores previous state.
     @PostMapping("/transactions/undo")
     public String undoLastAction() {
         String result = financeTrackerService.undoLastAction();
@@ -155,6 +166,7 @@ public class DashboardController {
         return redirectWithError("Nothing to undo.");
     }
 
+    // Creates a categorization rule for auto-categorizing transactions based on keywords.
     @PostMapping("/rules")
     public String addRule(@RequestParam("pattern") String pattern,
                           @RequestParam("category") String category,
@@ -168,6 +180,7 @@ public class DashboardController {
         }
     }
 
+    // Exports the current transaction list as a CSV file for download.
     @GetMapping("/export/csv")
     public ResponseEntity<byte[]> exportCsv(
             @RequestParam(value = "from", required = false) String from,
@@ -184,6 +197,7 @@ public class DashboardController {
                 .body(csvBytes);
     }
 
+    // Creates a monthly spending budget for a specific category with alert threshold.
     @PostMapping("/budgets")
     public String addBudget(@RequestParam("category") String category,
                            @RequestParam("monthlyLimit") String monthlyLimit,
@@ -200,6 +214,7 @@ public class DashboardController {
         }
     }
 
+    // Removes a budget definition by its ID.
     @PostMapping("/budgets/delete")
     public String deleteBudget(@RequestParam("id") Long id) {
         try {
@@ -210,6 +225,7 @@ public class DashboardController {
         }
     }
 
+    // Populates the model with dashboard data including transactions, trends, budgets, and analytics.
     private void populateModel(Model model, LocalDate from, LocalDate to) {
         boolean filtered = from != null || to != null;
         List<TransactionDto> transactions = filtered
@@ -247,6 +263,7 @@ public class DashboardController {
         model.addAttribute("recentActivity", auditService.getRecentActivity(10));
     }
 
+    // Safely parses an optional date string with null-safe handling.
     private LocalDate parseOptionalDate(String dateStr) {
         if (dateStr == null || dateStr.isBlank()) return null;
         try {
@@ -256,14 +273,17 @@ public class DashboardController {
         }
     }
 
+    // Builds a redirect URL with a success message parameter.
     private String redirectWithMessage(String message) {
         return "redirect:/?message=" + urlEncode(message);
     }
 
+    // Builds a redirect URL with an error message parameter.
     private String redirectWithError(String message) {
         return "redirect:/?error=" + urlEncode(message);
     }
 
+    // URL-encodes a string for safe use in redirect parameters.
     private String urlEncode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }

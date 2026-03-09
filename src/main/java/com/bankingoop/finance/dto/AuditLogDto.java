@@ -15,6 +15,7 @@ public record AuditLogDto(
     String details,
     LocalDateTime createdAt
 ) {
+    /** Converts audit log entity to DTO for API and view layer use. */
     public static AuditLogDto from(AuditLogEntity e) {
         return new AuditLogDto(
             e.getId(),

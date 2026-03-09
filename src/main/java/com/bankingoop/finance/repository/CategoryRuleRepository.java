@@ -13,9 +13,12 @@ import com.bankingoop.finance.entity.CategoryRuleEntity;
 @Repository
 public interface CategoryRuleRepository extends JpaRepository<CategoryRuleEntity, Long> {
 
+    /** Finds all enabled rules ordered by priority from highest to lowest. */
     List<CategoryRuleEntity> findByEnabledTrueOrderByPriorityDesc();
 
+    /** Finds user-created rules ordered by creation date (newest first). */
     List<CategoryRuleEntity> findByIsDefaultFalseOrderByCreatedAtDesc();
 
+    /** Finds built-in rules ordered by priority from highest to lowest. */
     List<CategoryRuleEntity> findByIsDefaultTrueOrderByPriorityDesc();
 }

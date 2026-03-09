@@ -7,4 +7,5 @@ import com.bankingoop.finance.entity.ProfileEntity;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<ProfileEntity, Long> {
+    /** Spring Data repository providing standard CRUD operations for profile entities. */
 }

@@ -16,6 +16,7 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
+    /** Creates OpenAPI/Swagger documentation bean for auto-generated API docs. */
     @Bean
     public OpenAPI kansoOpenAPI() {
         return new OpenAPI()

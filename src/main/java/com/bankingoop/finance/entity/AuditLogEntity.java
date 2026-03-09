@@ -45,28 +45,41 @@ public class AuditLogEntity {
     private LocalDateTime createdAt;
 
     @PrePersist
+    // Initializes creation timestamp automatically on persist.
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
     }
 
     // --- Getters / Setters ---
 
+    // Returns the audit log ID.
     public Long getId() { return id; }
 
+    // Returns the event type (CREATE, UPDATE, DELETE, etc).
     public String getEventType() { return eventType; }
+    // Sets the event type.
     public void setEventType(String eventType) { this.eventType = eventType; }
 
+    // Returns the entity type being audited.
     public String getEntityType() { return entityType; }
+    // Sets the entity type.
     public void setEntityType(String entityType) { this.entityType = entityType; }
 
+    // Returns the ID of the audited entity.
     public Long getEntityId() { return entityId; }
+    // Sets the entity ID.
     public void setEntityId(Long entityId) { this.entityId = entityId; }
 
+    // Returns the event details description.
     public String getDetails() { return details; }
+    // Sets the details.
     public void setDetails(String details) { this.details = details; }
 
+    // Returns the event metadata as JSON.
     public String getMetadata() { return metadata; }
+    // Sets the metadata.
     public void setMetadata(String metadata) { this.metadata = metadata; }
 
+    // Returns the creation timestamp.
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

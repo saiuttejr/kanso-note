@@ -13,6 +13,7 @@ public record CategoryRuleDto(
     boolean enabled,
     boolean isDefault
 ) {
+    /** Converts category rule entity to DTO for API and view layer use. */
     public static CategoryRuleDto from(com.bankingoop.finance.entity.CategoryRuleEntity e) {
         return new CategoryRuleDto(
             e.getId(),

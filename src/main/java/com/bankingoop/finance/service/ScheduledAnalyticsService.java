@@ -24,6 +24,7 @@ public class ScheduledAnalyticsService {
     private final BudgetService budgetService;
     private final AuditService auditService;
 
+    /** Initializes scheduled analytics with dependencies for budget and transaction monitoring. */
     public ScheduledAnalyticsService(FinanceTrackerService financeTrackerService,
                                      BudgetService budgetService,
                                      AuditService auditService) {
@@ -32,9 +33,7 @@ public class ScheduledAnalyticsService {
         this.auditService = auditService;
     }
 
-    /**
-     * Runs every hour — checks all budgets for threshold violations.
-     */
+    /** Scheduled hourly check for budget threshold violations and exceeded limits. */
     @Scheduled(fixedRate = 3600000, initialDelay = 60000)
     public void checkBudgetAlerts() {
         log.debug("Running scheduled budget check...");
@@ -49,9 +48,7 @@ public class ScheduledAnalyticsService {
         }
     }
 
-    /**
-     * Runs daily at midnight — generates a daily spending summary audit entry.
-     */
+    /** Scheduled daily audit event recording total transactions, income, and expenses. */
     @Scheduled(cron = "0 0 0 * * ?")
     public void dailySpendingSummary() {
         log.debug("Generating daily spending summary...");
@@ -66,9 +63,7 @@ public class ScheduledAnalyticsService {
         log.info(summary);
     }
 
-    /**
-     * Runs every 6 hours — detects new spending anomalies.
-     */
+    /** Scheduled 6-hourly detection and logging of unusual spending transactions. */
     @Scheduled(fixedRate = 21600000, initialDelay = 120000)
     public void detectAnomalies() {
         log.debug("Running scheduled anomaly detection...");

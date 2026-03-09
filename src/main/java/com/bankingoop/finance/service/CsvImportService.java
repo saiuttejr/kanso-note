@@ -30,6 +30,7 @@ public class CsvImportService {
     };
 
     public List<CsvTransactionRow> parse(MultipartFile file) throws IOException {
+        /** Parses a CSV file from multipart upload into list of transaction rows. */
         if (file == null || file.isEmpty()) {
             return List.of();
         }
@@ -38,12 +39,14 @@ public class CsvImportService {
         }
     }
 
+    /** Parses a CSV input stream into list of transaction rows with validation. */
     public List<CsvTransactionRow> parse(InputStream inputStream) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             return parse(reader);
         }
     }
 
+    /** Core CSV parsing logic with header mapping and row validation. */
     private List<CsvTransactionRow> parse(BufferedReader reader) throws IOException {
         String headerLine = reader.readLine();
         if (headerLine == null || headerLine.isBlank()) {
@@ -79,6 +82,7 @@ public class CsvImportService {
         return rows;
     }
 
+    /** Maps CSV header names to column indices for flexible column ordering. */
     private Map<String, Integer> toHeaderIndexMap(List<String> headers) {
         Map<String, Integer> map = new HashMap<>();
         for (int i = 0; i < headers.size(); i++) {
@@ -88,6 +92,7 @@ public class CsvImportService {
         return map;
     }
 
+    /** Retrieves column index for required field or throws exception if missing. */
     private int getRequiredIndex(Map<String, Integer> indexes, String field) {
         Integer index = indexes.get(field);
         if (index == null) {
@@ -96,6 +101,7 @@ public class CsvImportService {
         return index;
     }
 
+    /** Safely reads and trims a cell value, returning empty string if out of bounds. */
     private String readCell(List<String> cells, int index) {
         if (index < 0 || index >= cells.size()) {
             return "";
@@ -103,6 +109,7 @@ public class CsvImportService {
         return cells.get(index).trim();
     }
 
+    /** Parses date from text supporting multiple formats (ISO, MM/dd/yyyy, dd-MM-yyyy). */
     private LocalDate parseDate(String text) {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("date is blank");
@@ -117,6 +124,7 @@ public class CsvImportService {
         throw new IllegalArgumentException("unsupported date format: " + text);
     }
 
+    /** Parses amount handling currency symbols, commas, and parentheses notation. */
     private BigDecimal parseAmount(String amountText) {
         if (amountText == null || amountText.isBlank()) {
             throw new IllegalArgumentException("amount is blank");
@@ -137,6 +145,7 @@ public class CsvImportService {
         }
     }
 
+    /** Splits CSV line respecting quoted fields and escaped quotes within fields. */
     private List<String> splitCsvLine(String line) {
         List<String> cells = new ArrayList<>();
         StringBuilder current = new StringBuilder();

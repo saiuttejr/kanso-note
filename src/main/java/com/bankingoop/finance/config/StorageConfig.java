@@ -25,6 +25,7 @@ public class StorageConfig {
     @Value("${kanso.storage.db-path:./data/kanso-db}")
     private String dbPath;
 
+    /** Post-construct initialization creating upload and database directories if missing. */
     @PostConstruct
     public void initDirectories() {
         createDir(Paths.get(uploadDir));
@@ -33,6 +34,7 @@ public class StorageConfig {
                 uploadDir, Paths.get(dbPath).getParent());
     }
 
+    /** Recursively creates specified directory, throwing runtime exception on failure. */
     private void createDir(Path dir) {
         if (dir == null) {
             return;

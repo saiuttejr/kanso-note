@@ -32,6 +32,7 @@ public class StorageServiceImpl implements StorageService {
     private final Path uploadDir;
     private final Path dbPath;
 
+    /** Initializes storage service with configured upload and database directory paths. */
     public StorageServiceImpl(
             @Value("${kanso.storage.upload-dir:./data/uploads}") String uploadDir,
             @Value("${kanso.storage.db-path:./data/kanso-db}") String dbPath) {
@@ -41,6 +42,7 @@ public class StorageServiceImpl implements StorageService {
         log.info("StorageService initialised — uploads: {}, db: {}", this.uploadDir, this.dbPath);
     }
 
+    /** Saves CSV with timestamp prefix and optional encryption to uploads directory. */
     @Override
     public Path saveCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException {
         if (file == null || file.isEmpty()) {
@@ -73,6 +75,7 @@ public class StorageServiceImpl implements StorageService {
         return target;
     }
 
+    /** Lists all regular files in uploads directory in sorted order. */
     @Override
     public List<Path> listUploads() {
         if (!Files.isDirectory(uploadDir)) {
@@ -89,6 +92,7 @@ public class StorageServiceImpl implements StorageService {
         }
     }
 
+    /** Reads file with path traversal guard and optional decryption. */
     @Override
     public byte[] readUpload(String fileName, char[] passphrase) throws IOException, GeneralSecurityException {
         Path filePath = uploadDir.resolve(fileName).normalize();
@@ -113,6 +117,7 @@ public class StorageServiceImpl implements StorageService {
         return raw;
     }
 
+    /** Reads H2 database file and writes encryption using EncryptionUtil. */
     @Override
     public void encryptDatabase(char[] passphrase) throws IOException, GeneralSecurityException {
         if (passphrase == null || passphrase.length == 0) {
@@ -132,6 +137,7 @@ public class StorageServiceImpl implements StorageService {
         log.info("Database backup encrypted → {}", encFile.getFileName());
     }
 
+    /** Decrypts encrypted backup and writes to restored file with .mv.db extension. */
     @Override
     public void decryptDatabase(char[] passphrase) throws IOException, GeneralSecurityException {
         if (passphrase == null || passphrase.length == 0) {
@@ -153,6 +159,7 @@ public class StorageServiceImpl implements StorageService {
         log.info("Database backup decrypted → {}", restoredFile.getFileName());
     }
 
+    /** Resolves H2 database file path handling both .mv.db extension and raw paths. */
     private Path resolveDbFile() {
         // H2 appends .mv.db to the configured path
         Path mvDb = Paths.get(dbPath + ".mv.db");
@@ -163,6 +170,7 @@ public class StorageServiceImpl implements StorageService {
         return dbPath;
     }
 
+    /** Removes directory components and replaces unsafe characters in file names. */
     private String sanitizeFileName(String originalName) {
         if (originalName == null || originalName.isBlank()) {
             return "upload.csv";
@@ -173,6 +181,7 @@ public class StorageServiceImpl implements StorageService {
         return name.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 
+    /** Creates directory recursively and throws runtime exception on failure. */
     private void ensureDirectoryExists(Path dir) {
         try {
             Files.createDirectories(dir);

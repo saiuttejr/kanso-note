@@ -35,6 +35,7 @@ public class ProfileEntity {
     private LocalDateTime updatedAt;
 
     @PrePersist
+    // Initializes creation and update timestamps on persist.
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         if (createdAt == null) createdAt = now;
@@ -42,21 +43,30 @@ public class ProfileEntity {
     }
 
     @PreUpdate
+    // Updates the timestamp when the profile is modified.
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
     // --- Getters and Setters ---
 
+    // Returns the profile ID.
     public Long getId() { return id; }
+    // Sets the profile ID.
     public void setId(Long id) { this.id = id; }
 
+    // Returns the user display name.
     public String getDisplayName() { return displayName; }
+    // Sets the display name.
     public void setDisplayName(String displayName) { this.displayName = displayName; }
 
+    // Returns the encryption salt hex string.
     public String getEncryptionSalt() { return encryptionSalt; }
+    // Sets the encryption salt.
     public void setEncryptionSalt(String encryptionSalt) { this.encryptionSalt = encryptionSalt; }
 
+    // Returns the creation timestamp.
     public LocalDateTime getCreatedAt() { return createdAt; }
+    // Returns the last update timestamp.
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

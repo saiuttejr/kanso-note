@@ -3,8 +3,7 @@ package com.bankingoop.finance.dto;
 import java.math.BigDecimal;
 
 /**
- * DTO for recurring transaction patterns based on description and amount similarity.
- * Groups transactions that appear at roughly the same amount on the same day each month.
+ * Data transfer object for recurring transaction patterns with frequency and occurrence count.
  */
 public record RecurringTransactionDto(
     String description,

@@ -12,46 +12,18 @@ import java.util.List;
  */
 public interface StorageService {
 
-    /**
-     * Saves an uploaded CSV file to the local uploads directory.
-     *
-     * @param file       the uploaded multipart file
-     * @param passphrase optional — if non-null, the file is AES-encrypted before writing.
-     * @return the path where the file was stored
-     */
+    /** Saves uploaded CSV file with optional AES-256 encryption to local storage. */
     Path saveCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException;
 
-    /**
-     * Lists all uploaded files in the uploads directory.
-     */
+    /** Lists all files in the uploads directory in sorted order. */
     List<Path> listUploads();
 
-    /**
-     * Reads an uploaded file, decrypting if a passphrase is provided.
-     *
-     * @param fileName   the stored file name
-     * @param passphrase optional — required if the file was encrypted
-     * @return raw CSV bytes (decrypted if necessary)
-     */
+    /** Reads an uploaded file and decrypts if passphrase provided. */
     byte[] readUpload(String fileName, char[] passphrase) throws IOException, GeneralSecurityException;
 
-    /**
-     * Encrypts the H2 database backup file with the given passphrase.
-     * Creates a copy at {@code data/kanso-db-backup.mv.db.enc}.
-     *
-     * Threat model: protects data-at-rest if the device is lost or stolen.
-     * Does NOT protect against an attacker with live OS access.
-     *
-     * cryptography: suitable for demo/offline use; for production consider HSM or OS keystore.
-     */
+    /** Encrypts H2 database backup with AES-256-GCM for offline protection. */
     void encryptDatabase(char[] passphrase) throws IOException, GeneralSecurityException;
 
-    /**
-     * Decrypts a previously encrypted database backup and restores it.
-     *
-     * WARNING: the passphrase must match the one used during encryption.
-     * A wrong passphrase will throw a GeneralSecurityException (AES-GCM tag mismatch).
-     * Data encrypted with a forgotten passphrase is irrecoverable — by design.
-     */
+    /** Decrypts and restores encrypted database backup using matching passphrase. */
     void decryptDatabase(char[] passphrase) throws IOException, GeneralSecurityException;
 }

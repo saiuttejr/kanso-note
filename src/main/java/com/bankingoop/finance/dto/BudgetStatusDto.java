@@ -13,10 +13,12 @@ public record BudgetStatusDto(
     BigDecimal utilizationPercent,
     String alertLevel     // "safe", "warning", "exceeded"
 ) {
+    /** Returns true if budget alert level is 'exceeded'. */
     public boolean isExceeded() {
         return "exceeded".equals(alertLevel);
     }
 
+    /** Returns true if budget alert level is 'warning'. */
     public boolean isWarning() {
         return "warning".equals(alertLevel);
     }

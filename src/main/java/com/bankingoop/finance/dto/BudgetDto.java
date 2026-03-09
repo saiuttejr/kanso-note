@@ -14,6 +14,7 @@ public record BudgetDto(
     BigDecimal alertThreshold,
     boolean enabled
 ) {
+    /** Converts budget entity to DTO for API and view layer use. */
     public static BudgetDto from(BudgetEntity e) {
         return new BudgetDto(
             e.getId(),

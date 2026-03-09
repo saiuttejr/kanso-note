@@ -21,6 +21,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @EnableAsync
 public class CacheConfig {
 
+    /** Configures Caffeine cache manager with 5-minute expiry and 100-entry limit. */
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager(

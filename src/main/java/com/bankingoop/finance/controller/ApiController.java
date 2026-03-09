@@ -34,12 +34,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/v1")
 @Tag(name = "Kanso Finance API", description = "RESTful API for personal finance management")
+// REST API controller providing JSON endpoints for programmatic access to financial data.
 public class ApiController {
 
     private final FinanceTrackerService financeTrackerService;
     private final BudgetService budgetService;
     private final AuditService auditService;
 
+    // Constructor injecting dependent services for API operations.
     public ApiController(FinanceTrackerService financeTrackerService,
                          BudgetService budgetService,
                          AuditService auditService) {
@@ -48,6 +50,7 @@ public class ApiController {
         this.auditService = auditService;
     }
 
+    // Retrieves all transactions or filters by optional date range.
     @GetMapping("/transactions")
     @Operation(summary = "List transactions", description = "Returns all transactions, optionally filtered by date range")
     public ResponseEntity<List<TransactionDto>> getTransactions(
@@ -64,12 +67,15 @@ public class ApiController {
     @PostMapping("/transactions")
     @Operation(summary = "Create transaction", description = "Add a new transaction with auto-categorization")
     @ApiResponse(responseCode = "201", description = "Transaction created")
+    // Creates a new transaction with automatic categorization.
     public ResponseEntity<TransactionDto> createTransaction(@RequestBody CreateTransactionRequest request) {
         TransactionDto dto = financeTrackerService.addManualTransaction(
                 request.date(), request.description(), request.amount(), request.category());
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    // Updates an existing transaction by ID.
+    // Updates an existing transaction by ID.
     @PutMapping("/transactions/{id}")
     @Operation(summary = "Update transaction")
     public ResponseEntity<TransactionDto> updateTransaction(@PathVariable Long id,
@@ -79,6 +85,8 @@ public class ApiController {
         return ResponseEntity.ok(dto);
     }
 
+    // Deletes a transaction by ID.
+    // Deletes a transaction by ID.
     @DeleteMapping("/transactions/{id}")
     @Operation(summary = "Delete transaction")
     public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
@@ -86,6 +94,8 @@ public class ApiController {
         return ResponseEntity.noContent().build();
     }
 
+    // Returns comprehensive financial analytics including trends, anomalies, and savings rate.
+    // Returns comprehensive financial analytics including trends, anomalies, and savings rate.
     @GetMapping("/analytics/summary")
     @Operation(summary = "Get analytics summary", description = "Comprehensive financial analytics including trends, anomalies, and savings rate")
     public ResponseEntity<AnalyticsSummaryDto> getAnalyticsSummary() {
@@ -102,24 +112,32 @@ public class ApiController {
         ));
     }
 
+    // Provides monthly income/expense trends with deltas and rolling averages.
+    // Provides monthly income/expense trends with deltas and rolling averages.
     @GetMapping("/analytics/monthly-trends")
     @Operation(summary = "Get monthly trends", description = "Monthly income/expense with month-over-month delta and 3-month rolling average")
     public ResponseEntity<List<MonthlyTrendDto>> getMonthlyTrends() {
         return ResponseEntity.ok(financeTrackerService.getMonthlyTrends());
     }
 
+    // Detects unusual transactions using statistical analysis (mean + 2σ threshold).
+    // Detects unusual transactions using statistical analysis (mean + 2σ threshold).
     @GetMapping("/analytics/anomalies")
     @Operation(summary = "Detect unusual transactions", description = "Statistical anomaly detection using mean + 2σ threshold")
     public ResponseEntity<List<UnusualTransactionDto>> getAnomalies() {
         return ResponseEntity.ok(financeTrackerService.detectUnusualTransactions());
     }
 
+    // Identifies recurring transactions by description and amount similarity.
+    // Identifies recurring transactions by description and amount similarity.
     @GetMapping("/analytics/recurring")
     @Operation(summary = "Detect recurring transactions", description = "Identifies recurring transactions by description and amount similarity")
     public ResponseEntity<List<RecurringTransactionDto>> getRecurring() {
         return ResponseEntity.ok(financeTrackerService.detectRecurringTransactions());
     }
 
+    // Returns top spending categories with configurable limit.
+    // Returns top spending categories with configurable limit.
     @GetMapping("/analytics/categories")
     @Operation(summary = "Top spending categories")
     public ResponseEntity<List<CategorySpendDto>> getTopCategories(
@@ -127,18 +145,23 @@ public class ApiController {
         return ResponseEntity.ok(financeTrackerService.getTopCategories(limit));
     }
 
-    @PostMapping("/transactions")
+    // Returns all enabled budgets.
+    @GetMapping("/budgets")
     @Operation(summary = "List budgets", description = "Returns all enabled budgets")
     public ResponseEntity<List<BudgetDto>> getBudgets() {
         return ResponseEntity.ok(budgetService.getAllBudgets());
     }
 
+    // Provides real-time budget status with spending analysis against limits.
+    // Provides real-time budget status with spending analysis against limits.
     @GetMapping("/budgets/status")
     @Operation(summary = "Get budget statuses", description = "Real-time budget status with spending analysis against limits")
     public ResponseEntity<List<BudgetStatusDto>> getBudgetStatuses() {
         return ResponseEntity.ok(budgetService.getBudgetStatuses());
     }
 
+    // Creates a new budget with monthly limit and alert threshold.
+    // Creates a new budget with monthly limit and alert threshold.
     @PostMapping("/budgets")
     @Operation(summary = "Create budget")
     @ApiResponse(responseCode = "201", description = "Budget created")
@@ -148,6 +171,8 @@ public class ApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    // Updates an existing budget by ID with new limits.
+    // Updates an existing budget by ID with new limits.
     @PutMapping("/budgets/{id}")
     @Operation(summary = "Update budget")
     public ResponseEntity<BudgetDto> updateBudget(@PathVariable Long id,
@@ -156,6 +181,8 @@ public class ApiController {
         return ResponseEntity.ok(dto);
     }
 
+    // Deletes a budget by ID.
+    // Deletes a budget by ID.
     @DeleteMapping("/budgets/{id}")
     @Operation(summary = "Delete budget")
     public ResponseEntity<Void> deleteBudget(@PathVariable Long id) {
@@ -163,6 +190,8 @@ public class ApiController {
         return ResponseEntity.noContent().build();
     }
 
+    // Lists all custom and default categorization rules.
+    // Lists all custom and default categorization rules.
     @GetMapping("/rules")
     @Operation(summary = "List categorization rules")
     public ResponseEntity<Map<String, List<CategoryRuleDto>>> getRules() {
@@ -172,12 +201,16 @@ public class ApiController {
         ));
     }
 
+    // Generates auto-suggested rules based on uncategorized transactions.
+    // Generates auto-suggested rules based on uncategorized transactions.
     @GetMapping("/rules/suggestions")
     @Operation(summary = "Get rule suggestions", description = "Auto-suggested rules based on uncategorized transactions")
     public ResponseEntity<List<RuleSuggestionDto>> getRuleSuggestions() {
         return ResponseEntity.ok(financeTrackerService.suggestRules());
     }
 
+    // Returns the most recent audit log entries with configurable limit.
+    // Returns the most recent audit log entries with configurable limit.
     @GetMapping("/unusual")
     @Operation(summary = "Recent activity", description = "Returns the most recent audit log entries")
     public ResponseEntity<List<AuditLogDto>> getRecentActivity(

@@ -10,5 +10,6 @@ import com.bankingoop.finance.entity.UploadedFileEntity;
 @Repository
 public interface UploadedFileRepository extends JpaRepository<UploadedFileEntity, Long> {
 
+    /** Finds all uploaded file records ordered by upload timestamp (newest first). */
     List<UploadedFileEntity> findAllByOrderByUploadedAtDesc();
 }

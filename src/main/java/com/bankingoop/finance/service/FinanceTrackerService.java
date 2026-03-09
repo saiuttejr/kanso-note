@@ -48,6 +48,7 @@ public class FinanceTrackerService {
     private List<Long> lastAddedIds = new ArrayList<>();
     private String lastActionDescription = "";
 
+    /** Initializes finance tracker with all required service and repository dependencies. */
     public FinanceTrackerService(RuleEngineService ruleEngineService,
                                     CsvImportService csvImportService,
                                     TransactionRepository transactionRepository,
@@ -64,6 +65,7 @@ public class FinanceTrackerService {
         this.budgetService = budgetService;
     }
 
+    /** Creates a new transaction with automatic categorization and cache invalidation. */
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public TransactionDto addManualTransaction(LocalDate date, String description,
@@ -94,6 +96,7 @@ public class FinanceTrackerService {
         return TransactionDto.from(saved);
     }
 
+    /** Updates a transaction's fields and reapplies rule-based categorization. */
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public TransactionDto updateTransaction(Long id, LocalDate date, String description,
@@ -121,6 +124,7 @@ public class FinanceTrackerService {
         return TransactionDto.from(saved);
     }
 
+    /** Deletes a transaction and publishes deletion event for audit logging. */
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public void deleteTransaction(Long id) {
@@ -130,6 +134,7 @@ public class FinanceTrackerService {
         log.info("Deleted transaction #{}", id);
     }
 
+    /** Imports transactions from CSV with optional encryption and audit recording. */
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importFromCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException {
@@ -162,7 +167,7 @@ public class FinanceTrackerService {
         return rows.size();
     }
 
-    /** Backward-compatible: import without passphrase */
+    /** Backward-compatible CSV import without passphrase encryption. */
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importFromCsv(MultipartFile file) throws IOException {
@@ -173,7 +178,9 @@ public class FinanceTrackerService {
         }
     }
 
+    /** Loads demo transactions from sample-transactions.csv resource file. */
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importSampleData() throws IOException {
         ClassPathResource resource = new ClassPathResource("sample-transactions.csv");
         try (InputStream inputStream = resource.getInputStream()) {
@@ -191,11 +198,13 @@ public class FinanceTrackerService {
         }
     }
 
+    /** Retrieves all transactions ordered by date (newest first) and ID. */
     public List<TransactionDto> getTransactions() {
         return transactionRepository.findAllByOrderByDateDescIdDesc()
                 .stream().map(TransactionDto::from).toList();
     }
 
+    /** Retrieves transactions within date range with optional filtering. */
     public List<TransactionDto> getTransactions(LocalDate from, LocalDate to) {
         if (from == null && to == null) return getTransactions();
         LocalDate start = from != null ? from : LocalDate.of(2000, 1, 1);
@@ -204,6 +213,7 @@ public class FinanceTrackerService {
                 .stream().map(TransactionDto::from).toList();
     }
 
+    /** Calculates sum of all positive (income) transactions. */
     public BigDecimal getTotalIncome() {
         return transactionRepository.findAll().stream()
                 .filter(TransactionEntity::isIncome)
@@ -211,6 +221,7 @@ public class FinanceTrackerService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /** Calculates absolute sum of all negative (expense) transactions. */
     public BigDecimal getTotalExpense() {
         return transactionRepository.findAll().stream()
                 .filter(TransactionEntity::isExpense)
@@ -218,14 +229,17 @@ public class FinanceTrackerService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /** Calculates net cash flow (income minus total expenses). */
     public BigDecimal getNetFlow() {
         return getTotalIncome().subtract(getTotalExpense());
     }
 
+    /** Returns total number of transactions in the system. */
     public int getTransactionCount() {
         return (int) transactionRepository.count();
     }
 
+    /** Deletes all transactions and clears undo buffer. */
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int clearTransactions() {
@@ -241,6 +255,7 @@ public class FinanceTrackerService {
         return count;
     }
 
+    /** Computes monthly income/expense trends with MoM delta and rolling average. */
     @Cacheable("monthlyTrends")
     public List<MonthlyTrendDto> getMonthlyTrends() {
         List<TransactionEntity> all = transactionRepository.findAll();
@@ -297,7 +312,7 @@ public class FinanceTrackerService {
         return result;
     }
 
-    /** Top-N spending categories across all data (B5) */
+    /** Retrieves top N spending categories by total amount. */
     @Cacheable(value = "topCategories", key = "#limit")
     public List<CategorySpendDto> getTopCategories(int limit) {
         return transactionRepository.findAll().stream()
@@ -316,7 +331,7 @@ public class FinanceTrackerService {
                 .toList();
     }
 
-    /** Current month spending by category (existing feature) */
+    /** Returns current month spending grouped by category in descending order. */
     public Map<String, BigDecimal> getCurrentMonthCategorySpend() {
         YearMonth currentMonth = YearMonth.now();
         return transactionRepository.findAll().stream()
@@ -331,10 +346,7 @@ public class FinanceTrackerService {
                         (a, b) -> a, LinkedHashMap::new));
     }
 
-    /**
-     * Savings rate = (Income - Expense) / Income × 100 (B7).
-     * Returns null if no income. Color levels: ≥20% good, 10-20% warning, <10% danger.
-     */
+    /** Calculates savings rate as percentage of income, returns null if no income. */
     @Cacheable("savingsRate")
     public BigDecimal getSavingsRatePercent() {
         BigDecimal income = getTotalIncome();
@@ -345,6 +357,7 @@ public class FinanceTrackerService {
                 .setScale(1, RoundingMode.HALF_UP);
     }
 
+    /** Returns savings rate classification: good (≥20%), warning (10-20%), danger (<10%). */
     public String getSavingsRateLevel() {
         BigDecimal rate = getSavingsRatePercent();
         if (rate == null) return "neutral";
@@ -353,6 +366,7 @@ public class FinanceTrackerService {
         return "danger";
     }
 
+    /** Identifies outlier transactions using statistical analysis (mean + 2*stddev). */
     public List<UnusualTransactionDto> detectUnusualTransactions() {
         List<TransactionEntity> expenses = transactionRepository.findAllExpenses();
         if (expenses.size() < 5) return List.of();
@@ -378,6 +392,7 @@ public class FinanceTrackerService {
                 .toList();
     }
 
+    /** Detects recurring transactions by matching descriptions across multiple months. */
     @Cacheable("recurringTransactions")
     public List<RecurringTransactionDto> detectRecurringTransactions() {
         List<TransactionEntity> all = transactionRepository.findAll();
@@ -425,6 +440,7 @@ public class FinanceTrackerService {
         return result;
     }
 
+    /** Reverts the last batch operation (manual add/import) and returns result message. */
     @Transactional
     public String undoLastAction() {
         if (lastAddedIds.isEmpty()) {
@@ -438,34 +454,42 @@ public class FinanceTrackerService {
         return msg;
     }
 
+    /** Returns true if there are transactions available to undo. */
     public boolean canUndo() {
         return !lastAddedIds.isEmpty();
     }
 
+    /** Returns description of the last action performed for undo context. */
     public String getLastActionDescription() {
         return lastActionDescription;
     }
 
+    /** Delegates to rule engine to create a keyword-based categorization rule. */
     public void addRule(String keyword, String category) {
         ruleEngineService.addCustomRule(keyword, category);
     }
 
+    /** Delegates to rule engine to create a pattern-based categorization rule with priority. */
     public void addRule(String patternType, String pattern, String category, int priority) {
         ruleEngineService.addCustomRule(patternType, pattern, category, priority);
     }
 
+    /** Delegates to retrieve user-created categorization rules in reverse creation order. */
     public List<CategoryRuleDto> getCustomRules() {
         return ruleEngineService.getCustomRules();
     }
 
+    /** Delegates to retrieve built-in categorization rules ordered by priority. */
     public List<CategoryRuleDto> getDefaultRules() {
         return ruleEngineService.getDefaultRules();
     }
 
+    /** Delegates to generate auto-suggestions for new rules from uncategorized transactions. */
     public List<RuleSuggestionDto> suggestRules() {
         return ruleEngineService.suggestRules();
     }
 
+    /** Exports transactions within date range to CSV format with proper escaping. */
     public String exportToCsv(LocalDate from, LocalDate to) {
         List<TransactionDto> transactions = getTransactions(from, to);
         StringBuilder sb = new StringBuilder();

@@ -17,6 +17,7 @@ public record TransactionDto(
     boolean income,
     boolean expense
 ) {
+    /** Converts transaction entity to DTO for API and view layer use. */
     public static TransactionDto from(com.bankingoop.finance.entity.TransactionEntity e) {
         return new TransactionDto(
             e.getId(),

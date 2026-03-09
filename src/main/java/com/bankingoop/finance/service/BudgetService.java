@@ -36,6 +36,7 @@ public class BudgetService {
     private final TransactionRepository transactionRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /** Initializes budget service with repository and event publisher dependencies. */
     public BudgetService(BudgetRepository budgetRepository,
                          TransactionRepository transactionRepository,
                          ApplicationEventPublisher eventPublisher) {
@@ -44,6 +45,7 @@ public class BudgetService {
         this.eventPublisher = eventPublisher;
     }
 
+    /** Creates a new monthly budget for a category with spending limit and alert threshold. */
     @Transactional
     public BudgetDto createBudget(String category, BigDecimal monthlyLimit, BigDecimal alertThreshold) {
         if (category == null || category.isBlank()) {
@@ -71,6 +73,7 @@ public class BudgetService {
         return BudgetDto.from(saved);
     }
 
+    /** Updates an existing budget's monthly limit and/or alert threshold. */
     @Transactional
     public BudgetDto updateBudget(Long id, BigDecimal monthlyLimit, BigDecimal alertThreshold) {
         BudgetEntity entity = budgetRepository.findById(id)
@@ -88,6 +91,7 @@ public class BudgetService {
         return BudgetDto.from(saved);
     }
 
+    /** Deletes a budget and publishes deletion event to audit log. */
     @Transactional
     public void deleteBudget(Long id) {
         BudgetEntity entity = budgetRepository.findById(id)
@@ -99,15 +103,13 @@ public class BudgetService {
                 id, entity.getCategory(), "Budget deleted"));
     }
 
+    /** Retrieves all enabled budgets ordered by category name. */
     public List<BudgetDto> getAllBudgets() {
         return budgetRepository.findByEnabledTrueOrderByCategoryAsc()
                 .stream().map(BudgetDto::from).toList();
     }
 
-    /**
-     * Computes real-time budget status for all enabled budgets against current month spending.
-     * This is the core analytics feature — combining budget limits with actual transaction data.
-     */
+    /** Computes real-time budget status combining limits with current month spending. */
     public List<BudgetStatusDto> getBudgetStatuses() {
         List<BudgetEntity> budgets = budgetRepository.findByEnabledTrueOrderByCategoryAsc();
         if (budgets.isEmpty()) return List.of();
@@ -139,9 +141,7 @@ public class BudgetService {
         return statuses;
     }
 
-    /**
-     * Check budget after a transaction and publish events if thresholds are crossed.
-     */
+    /** Checks budget against current spending and publishes alerts if thresholds exceeded. */
     public void checkBudgetForCategory(String category) {
         budgetRepository.findByCategory(category).ifPresent(budget -> {
             if (!budget.isEnabled()) return;
@@ -168,6 +168,7 @@ public class BudgetService {
         });
     }
 
+    /** Calculates total spending for current month grouped by transaction category. */
     private Map<String, BigDecimal> getCurrentMonthSpendByCategory() {
         YearMonth currentMonth = YearMonth.now();
         return transactionRepository.findAll().stream()

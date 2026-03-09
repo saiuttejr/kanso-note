@@ -39,10 +39,7 @@ public final class EncryptionUtil {
 
     // --- Public API ---
 
-    /**
-     * Derives a 256-bit AES key from a passphrase and salt using PBKDF2.
-     * The high iteration count makes brute-force attacks expensive.
-     */
+    /** Derives 256-bit AES key from passphrase using PBKDF2 with 600k iterations. */
     public static SecretKey deriveKey(char[] passphrase, byte[] salt) throws GeneralSecurityException {
         PBEKeySpec spec = new PBEKeySpec(passphrase, salt, PBKDF2_ITERATIONS, KEY_LENGTH_BITS);
         try {
@@ -54,10 +51,7 @@ public final class EncryptionUtil {
         }
     }
 
-    /**
-     * Encrypts {@code plainBytes} with AES-256-GCM.
-     * Output format: [16-byte salt][12-byte IV][ciphertext+tag]
-     */
+    /** Encrypts data with AES-256-GCM returning [salt][IV][ciphertext+tag] format. */
     public static byte[] encrypt(byte[] plainBytes, char[] passphrase) throws GeneralSecurityException {
         byte[] salt = randomBytes(SALT_LENGTH_BYTES);
         byte[] iv = randomBytes(IV_LENGTH_BYTES);
@@ -77,10 +71,7 @@ public final class EncryptionUtil {
         return output;
     }
 
-    /**
-     * Decrypts data produced by {@link #encrypt(byte[], char[])}.
-     * Reads the prepended salt and IV, re-derives the key, then decrypts.
-     */
+    /** Decrypts data by extracting salt and IV then recomputing encryption key. */
     public static byte[] decrypt(byte[] encryptedBytes, char[] passphrase) throws GeneralSecurityException {
         if (encryptedBytes.length < SALT_LENGTH_BYTES + IV_LENGTH_BYTES) {
             throw new IllegalArgumentException("Encrypted data too short — possibly corrupted.");
@@ -102,10 +93,7 @@ public final class EncryptionUtil {
         return cipher.doFinal(cipherText);
     }
 
-    /**
-     * Encrypts a file on disk in-place (reads → encrypts → overwrites).
-     * Used by StorageService for CSV uploads and DB backup encryption.
-     */
+    /** Encrypts a file in-place by reading, encrypting, and overwriting contents. */
     public static void encryptFile(Path filePath, char[] passphrase) throws GeneralSecurityException, IOException {
         byte[] plainBytes = Files.readAllBytes(filePath);
         byte[] encrypted = encrypt(plainBytes, passphrase);
@@ -113,9 +101,7 @@ public final class EncryptionUtil {
         log.info("Encrypted file: {}", filePath.getFileName());
     }
 
-    /**
-     * Decrypts a file on disk in-place (reads → decrypts → overwrites).
-     */
+    /** Decrypts a file in-place by reading, decrypting, and overwriting contents. */
     public static void decryptFile(Path filePath, char[] passphrase) throws GeneralSecurityException, IOException {
         byte[] encryptedBytes = Files.readAllBytes(filePath);
         byte[] decrypted = decrypt(encryptedBytes, passphrase);
@@ -123,10 +109,7 @@ public final class EncryptionUtil {
         log.info("Decrypted file: {}", filePath.getFileName());
     }
 
-    /**
-     * Convenience: encrypt an InputStream and write the ciphertext to an OutputStream.
-     * Reads the full stream into memory — acceptable for CSV files under the 5 MB upload limit.
-     */
+    /** Encrypts data from input stream and writes ciphertext to output stream. */
     public static void encryptStream(InputStream in, OutputStream out, char[] passphrase)
             throws GeneralSecurityException, IOException {
         byte[] plainBytes = in.readAllBytes();
@@ -134,14 +117,13 @@ public final class EncryptionUtil {
         out.write(encrypted);
     }
 
-    /**
-     * Generates a random hex-encoded salt string (for storing in the profile table).
-     */
+    /** Generates random hex-encoded salt string for storage in database. */
     public static String generateSaltHex() {
         byte[] salt = randomBytes(SALT_LENGTH_BYTES);
         return bytesToHex(salt);
     }
 
+    /** Converts hex string to byte array. */
     public static byte[] hexToBytes(String hex) {
         int len = hex.length();
         byte[] bytes = new byte[len / 2];
@@ -152,6 +134,7 @@ public final class EncryptionUtil {
         return bytes;
     }
 
+    /** Converts byte array to hex string representation. */
     public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 2);
         for (byte b : bytes) {
@@ -162,6 +145,7 @@ public final class EncryptionUtil {
 
     // --- Internal helpers ---
 
+    /** Generates cryptographically random bytes using SecureRandom. */
     private static byte[] randomBytes(int length) {
         byte[] bytes = new byte[length];
         new SecureRandom().nextBytes(bytes);

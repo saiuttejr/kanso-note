@@ -32,6 +32,7 @@ public class RuleEngineService {
     private final CategoryRuleRepository ruleRepository;
     private final TransactionRepository transactionRepository;
 
+    /** Initializes rule engine with repository dependencies for rules and transactions. */
     public RuleEngineService(CategoryRuleRepository ruleRepository,
                              TransactionRepository transactionRepository) {
         this.ruleRepository = ruleRepository;
@@ -99,11 +100,7 @@ public class RuleEngineService {
         return new MatchResult("Uncategorized", null);
     }
 
-    /**
-     * Returns the match length if the rule matches the haystack, or 0 if no match.
-     * KEYWORD: case-insensitive substring match, returns keyword length.
-     * REGEX: Java regex find(), returns the length of the matched region.
-     */
+    /** Returns match length for rule against text (keyword or regex), 0 if no match. */
     private int matchLength(CategoryRuleEntity rule, String haystack) {
         String pattern = rule.getPattern();
         if (pattern == null || pattern.isBlank()) {
@@ -132,6 +129,7 @@ public class RuleEngineService {
 
     // --- Rule CRUD ---
 
+    /** Creates a new categorization rule with validation and logging. */
     @Transactional
     public CategoryRuleEntity addCustomRule(String patternType, String pattern, String category, int priority) {
         if (pattern == null || pattern.isBlank()) {
@@ -163,18 +161,20 @@ public class RuleEngineService {
         return saved;
     }
 
-    /** Backward-compatible: add KEYWORD rule with default priority */
+    /** Backward-compatible convenience method for creating keyword-based rules. */
     @Transactional
     public CategoryRuleEntity addCustomRule(String keyword, String category) {
         return addCustomRule("KEYWORD", keyword, category, 10);
     }
 
+    /** Permanently removes a categorization rule by ID. */
     @Transactional
     public void deleteRule(Long ruleId) {
         ruleRepository.deleteById(ruleId);
         log.info("Deleted rule #{}", ruleId);
     }
 
+    /** Enables or disables a rule without deleting it. */
     @Transactional
     public void toggleRule(Long ruleId, boolean enabled) {
         ruleRepository.findById(ruleId).ifPresent(rule -> {
@@ -184,16 +184,19 @@ public class RuleEngineService {
         });
     }
 
+    /** Retrieves user-created rules ordered by creation date (newest first). */
     public List<CategoryRuleDto> getCustomRules() {
         return ruleRepository.findByIsDefaultFalseOrderByCreatedAtDesc()
                 .stream().map(CategoryRuleDto::from).toList();
     }
 
+    /** Retrieves built-in rules ordered by priority (highest first). */
     public List<CategoryRuleDto> getDefaultRules() {
         return ruleRepository.findByIsDefaultTrueOrderByPriorityDesc()
                 .stream().map(CategoryRuleDto::from).toList();
     }
 
+    /** Retrieves all active rules (built-in and custom) ordered by priority. */
     public List<CategoryRuleDto> getAllEnabledRules() {
         return ruleRepository.findByEnabledTrueOrderByPriorityDesc()
                 .stream().map(CategoryRuleDto::from).toList();
@@ -201,9 +204,7 @@ public class RuleEngineService {
 
     // --- Auto-suggest rules from uncategorized transactions ---
 
-    /**
-     * Suggests categorization rules from uncategorized transaction descriptions.
-     */
+    /** Analyzes uncategorized transactions to suggest new categorization patterns. */
     public List<RuleSuggestionDto> suggestRules() {
         List<String> descriptions = transactionRepository.findDistinctUncategorizedDescriptions();
         if (descriptions.isEmpty()) {
@@ -227,6 +228,7 @@ public class RuleEngineService {
                 .toList();
     }
 
+    /** Extracts first meaningful word (≥3 chars) from transaction description. */
     private String extractKeyword(String description) {
         if (description == null || description.isBlank()) return null;
         String[] words = description.trim().toLowerCase(Locale.ROOT).split("\\s+");
@@ -239,8 +241,7 @@ public class RuleEngineService {
         return null;
     }
 
-    // --- Helpers ---
-
+    /** Normalizes category name to title case with single spaces. */
     String normalizeCategory(String category) {
         String cleaned = category.trim().replaceAll("\\s+", " ");
         if (cleaned.isBlank()) return "Uncategorized";

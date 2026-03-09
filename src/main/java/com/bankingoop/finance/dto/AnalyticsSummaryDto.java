@@ -3,7 +3,7 @@ package com.bankingoop.finance.dto;
 import java.math.BigDecimal;
 
 /**
- * DTO aggregating key financial metrics for the analytics dashboard.
+ * Data transfer object aggregating total income, expenses, trends, and top categories.
  */
 public record AnalyticsSummaryDto(
     BigDecimal totalIncome,

@@ -1,7 +1,7 @@
 package com.bankingoop.finance.dto;
 
 /**
- * DTO for auto-suggested rules based on uncategorized transaction clusters.
+ * Data transfer object for auto-suggested categorization rules with match count.
  */
 public record RuleSuggestionDto(
     String pattern,

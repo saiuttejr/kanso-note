@@ -28,6 +28,7 @@ public class AuditService {
 
     private final AuditLogRepository auditLogRepository;
 
+    // Initializes audit service with repository dependency.
     public AuditService(AuditLogRepository auditLogRepository) {
         this.auditLogRepository = auditLogRepository;
     }
@@ -36,6 +37,7 @@ public class AuditService {
 
     @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    // Logs transaction lifecycle events (create, update, delete, import, clear) to audit trail.
     public void onTransactionEvent(TransactionEvent event) {
         AuditLogEntity entry = new AuditLogEntity();
         entry.setEventType("TRANSACTION_" + event.getAction().name());
@@ -48,6 +50,7 @@ public class AuditService {
 
     @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    // Logs budget lifecycle events (create, update, delete, threshold reached, exceeded) to audit trail.
     public void onBudgetEvent(BudgetEvent event) {
         AuditLogEntity entry = new AuditLogEntity();
         entry.setEventType("BUDGET_" + event.getAction().name());
@@ -60,21 +63,25 @@ public class AuditService {
 
     // --- Query Methods ---
 
+    // Retrieves the most recent audit log entries up to specified limit.
     public List<AuditLogDto> getRecentActivity(int limit) {
         return auditLogRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit))
                 .stream().map(AuditLogDto::from).toList();
     }
 
+    // Retrieves all audit log entries recorded since a specified timestamp.
     public List<AuditLogDto> getActivitySince(LocalDateTime since) {
         return auditLogRepository.findRecentActivity(since)
                 .stream().map(AuditLogDto::from).toList();
     }
 
+    // Returns the count of audit log entries for a specific event type.
     public long countByEventType(String eventType) {
         return auditLogRepository.countByEventType(eventType);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    // Manually logs a custom audit event with specified type, entity, and details.
     public void logCustomEvent(String eventType, String entityType, Long entityId, String details) {
         AuditLogEntity entry = new AuditLogEntity();
         entry.setEventType(eventType);
@@ -84,6 +91,7 @@ public class AuditService {
         auditLogRepository.save(entry);
     }
 
+    // Formats transaction event details into human-readable audit log string.
     private String formatTransactionDetails(TransactionEvent event) {
         return switch (event.getAction()) {
             case CREATED -> String.format("Created: %s ($%s) → %s",
