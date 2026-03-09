@@ -284,6 +284,72 @@
                 </tbody>
             </table>
         </article>
+
+        <!-- Budget Management -->
+        <article class="card">
+            <h2>Budget Management</h2>
+            <form method="post" th:action="@{/budgets}" class="budget-form">
+                <div class="budget-inputs">
+                    <div>
+                        <label>Category</label>
+                        <input type="text" name="category" placeholder="Dining" required>
+                    </div>
+                    <div>
+                        <label>Monthly Limit ($)</label>
+                        <input type="text" name="monthlyLimit" placeholder="500.00" required>
+                    </div>
+                    <div>
+                        <label>Alert at (%)</label>
+                        <input type="number" name="alertThreshold" value="80" min="1" max="100">
+                    </div>
+                </div>
+                <button type="submit">Set Budget</button>
+            </form>
+
+            <!-- Budget Status -->
+            <div th:if="${!#lists.isEmpty(budgetStatuses)}">
+                <h3>Budget Status (Current Month)</h3>
+                <div class="budget-status-list">
+                    <div th:each="bs : ${budgetStatuses}" class="budget-status-item">
+                        <div class="budget-header">
+                            <span class="budget-category" th:text="${bs.category()}"></span>
+                            <span class="budget-amounts">
+                                <span th:text="${'$' + bs.spent()}" class="expense"></span>
+                                <span> / </span>
+                                <span th:text="${'$' + bs.monthlyLimit()}"></span>
+                            </span>
+                            <form method="post" th:action="@{/budgets/delete}" style="display:inline;">
+                                <input type="hidden" name="id" th:value="${bs.budgetId()}">
+                                <button type="submit" class="small danger"
+                                        onclick="return confirm('Remove this budget?');">&times;</button>
+                            </form>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-fill"
+                                 th:classappend="${bs.alertLevel()}"
+                                 th:style="${'width: ' + (bs.utilizationPercent() > 100 ? 100 : bs.utilizationPercent()) + '%'}">
+                            </div>
+                        </div>
+                        <span class="budget-pct hint"
+                              th:classappend="${bs.alertLevel() == 'exceeded' ? 'expense' : ''}"
+                              th:text="${bs.utilizationPercent() + '% used'}"></span>
+                    </div>
+                </div>
+            </div>
+            <p th:if="${#lists.isEmpty(budgetStatuses)}" class="hint">No budgets set yet. Add one above to track spending limits.</p>
+        </article>
+
+        <!-- Activity Log -->
+        <article class="card" th:if="${!#lists.isEmpty(recentActivity)}">
+            <h2>Recent Activity</h2>
+            <div class="activity-feed">
+                <div th:each="log : ${recentActivity}" class="activity-item">
+                    <span class="activity-type" th:text="${log.eventType()}"></span>
+                    <span class="activity-detail" th:text="${log.details()}"></span>
+                    <span class="activity-time hint" th:text="${#temporals.format(log.createdAt(), 'MMM d, h:mm a')}"></span>
+                </div>
+            </div>
+        </article>
     </section>
 
     <!-- Transactions with date range filter (C12), edit/delete (E22), export (C11) -->
@@ -376,6 +442,7 @@
         <div class="footer-section">
             <p class="developer-credit">Developed by <strong>Sai Uttej R</strong></p>
             <p class="version">Version 2.0.0</p>
+            <p><a href="/swagger-ui.html" class="api-link">API Documentation</a></p>
         </div>
         <div class="footer-section">
             <p class="copyright">&copy; 2026 Kanso. All rights reserved.</p>

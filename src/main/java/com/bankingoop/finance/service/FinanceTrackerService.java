@@ -3,11 +3,15 @@ package com.bankingoop.finance.service;
 import com.bankingoop.finance.dto.*;
 import com.bankingoop.finance.entity.TransactionEntity;
 import com.bankingoop.finance.entity.UploadedFileEntity;
+import com.bankingoop.finance.event.TransactionEvent;
 import com.bankingoop.finance.model.CsvTransactionRow;
 import com.bankingoop.finance.repository.TransactionRepository;
 import com.bankingoop.finance.repository.UploadedFileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +46,8 @@ public class FinanceTrackerService {
     private final TransactionRepository transactionRepository;
     private final UploadedFileRepository uploadedFileRepository;
     private final StorageService storageService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final BudgetService budgetService;
 
     // Undo buffer: stores the IDs of last batch operation for single-step undo (E23)
     private List<Long> lastAddedIds = new ArrayList<>();
@@ -51,12 +57,16 @@ public class FinanceTrackerService {
                                     CsvImportService csvImportService,
                                     TransactionRepository transactionRepository,
                                     UploadedFileRepository uploadedFileRepository,
-                                    StorageService storageService) {
+                                    StorageService storageService,
+                                    ApplicationEventPublisher eventPublisher,
+                                    BudgetService budgetService) {
         this.ruleEngineService = ruleEngineService;
         this.csvImportService = csvImportService;
         this.transactionRepository = transactionRepository;
         this.uploadedFileRepository = uploadedFileRepository;
         this.storageService = storageService;
+        this.eventPublisher = eventPublisher;
+        this.budgetService = budgetService;
     }
 
     // -----------------------------------------------------------------------
@@ -64,6 +74,7 @@ public class FinanceTrackerService {
     // -----------------------------------------------------------------------
 
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public TransactionDto addManualTransaction(LocalDate date, String description,
                                                BigDecimal amount, String category) {
         if (date == null) throw new IllegalArgumentException("Date is required.");
@@ -83,10 +94,17 @@ public class FinanceTrackerService {
         lastAddedIds = List.of(saved.getId());
         lastActionDescription = "Added transaction: " + description;
         log.info("Added transaction #{}: {} {} → {}", saved.getId(), date, description, match.category());
+
+        // Publish event for audit logging and budget checks
+        eventPublisher.publishEvent(new TransactionEvent(this, TransactionEvent.Action.CREATED,
+                saved.getId(), description, match.category(), amount));
+        budgetService.checkBudgetForCategory(match.category());
+
         return TransactionDto.from(saved);
     }
 
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public TransactionDto updateTransaction(Long id, LocalDate date, String description,
                                             BigDecimal amount, String category) {
         TransactionEntity entity = transactionRepository.findById(id)
@@ -104,11 +122,19 @@ public class FinanceTrackerService {
 
         TransactionEntity saved = transactionRepository.save(entity);
         log.info("Updated transaction #{}", id);
+
+        eventPublisher.publishEvent(new TransactionEvent(this, TransactionEvent.Action.UPDATED,
+                saved.getId(), saved.getDescription(), saved.getCategory(), saved.getAmount()));
+        budgetService.checkBudgetForCategory(saved.getCategory());
+
         return TransactionDto.from(saved);
     }
 
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public void deleteTransaction(Long id) {
+        eventPublisher.publishEvent(new TransactionEvent(this, TransactionEvent.Action.DELETED,
+                id, null, null, null));
         transactionRepository.deleteById(id);
         log.info("Deleted transaction #{}", id);
     }
@@ -118,6 +144,7 @@ public class FinanceTrackerService {
     // -----------------------------------------------------------------------
 
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importFromCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException {
         // Save uploaded file to local storage (optionally encrypted)
         Path storedPath = storageService.saveCsv(file, passphrase);
@@ -141,11 +168,16 @@ public class FinanceTrackerService {
         lastAddedIds = importedIds;
         lastActionDescription = "Imported " + rows.size() + " transactions from CSV";
         log.info("Imported {} transactions from CSV (stored: {})", rows.size(), storedPath.getFileName());
+
+        eventPublisher.publishEvent(new TransactionEvent(this, TransactionEvent.Action.IMPORTED,
+                null, "CSV import: " + rows.size() + " transactions", null, null));
+
         return rows.size();
     }
 
     /** Backward-compatible: import without passphrase */
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importFromCsv(MultipartFile file) throws IOException {
         try {
             return importFromCsv(file, null);
@@ -212,12 +244,17 @@ public class FinanceTrackerService {
     }
 
     @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int clearTransactions() {
         int count = getTransactionCount();
         transactionRepository.deleteAll();
         lastAddedIds = List.of();
         lastActionDescription = "";
         log.info("Cleared {} transactions", count);
+
+        eventPublisher.publishEvent(new TransactionEvent(this, TransactionEvent.Action.CLEARED,
+                null, "Cleared " + count + " transactions", null, null));
+
         return count;
     }
 
@@ -233,6 +270,7 @@ public class FinanceTrackerService {
      *   JPQL aggregation. For a single-user app with < 100K transactions this is
      *   fast enough and keeps the code simple and testable.
      */
+    @Cacheable("monthlyTrends")
     public List<MonthlyTrendDto> getMonthlyTrends() {
         List<TransactionEntity> all = transactionRepository.findAll();
         Map<YearMonth, BigDecimal> incomeByMonth = new TreeMap<>();
@@ -289,6 +327,7 @@ public class FinanceTrackerService {
     }
 
     /** Top-N spending categories across all data (B5) */
+    @Cacheable(value = "topCategories", key = "#limit")
     public List<CategorySpendDto> getTopCategories(int limit) {
         return transactionRepository.findAll().stream()
                 .filter(TransactionEntity::isExpense)
@@ -325,6 +364,7 @@ public class FinanceTrackerService {
      * Savings rate = (Income - Expense) / Income × 100 (B7).
      * Returns null if no income. Color levels: ≥20% good, 10-20% warning, <10% danger.
      */
+    @Cacheable("savingsRate")
     public BigDecimal getSavingsRatePercent() {
         BigDecimal income = getTotalIncome();
         if (income.compareTo(BigDecimal.ZERO) == 0) return null;
@@ -390,6 +430,7 @@ public class FinanceTrackerService {
      * (within 5% tolerance). If a description appears in ≥ 2 distinct months with
      * similar amounts, mark it as recurring. This catches rent, salary, subscriptions.
      */
+    @Cacheable("recurringTransactions")
     public List<RecurringTransactionDto> detectRecurringTransactions() {
         List<TransactionEntity> all = transactionRepository.findAll();
 

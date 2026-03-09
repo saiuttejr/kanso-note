@@ -19,15 +19,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.bankingoop.finance.dto.TransactionDto;
+import com.bankingoop.finance.service.AuditService;
+import com.bankingoop.finance.service.BudgetService;
 import com.bankingoop.finance.service.FinanceTrackerService;
 
 @Controller
 public class DashboardController {
 
     private final FinanceTrackerService financeTrackerService;
+    private final BudgetService budgetService;
+    private final AuditService auditService;
 
-    public DashboardController(FinanceTrackerService financeTrackerService) {
+    public DashboardController(FinanceTrackerService financeTrackerService,
+                               BudgetService budgetService,
+                               AuditService auditService) {
         this.financeTrackerService = financeTrackerService;
+        this.budgetService = budgetService;
+        this.auditService = auditService;
     }
 
     // -----------------------------------------------------------------------
@@ -201,6 +209,36 @@ public class DashboardController {
     }
 
     // -----------------------------------------------------------------------
+    // Budgets
+    // -----------------------------------------------------------------------
+
+    @PostMapping("/budgets")
+    public String addBudget(@RequestParam("category") String category,
+                           @RequestParam("monthlyLimit") String monthlyLimit,
+                           @RequestParam(value = "alertThreshold", defaultValue = "80") String alertThreshold) {
+        try {
+            BigDecimal limit = new BigDecimal(monthlyLimit);
+            BigDecimal threshold = new BigDecimal(alertThreshold);
+            budgetService.createBudget(category, limit, threshold);
+            return redirectWithMessage("Budget added for " + category + ".");
+        } catch (NumberFormatException ex) {
+            return redirectWithError("Invalid budget amount.");
+        } catch (Exception ex) {
+            return redirectWithError(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/budgets/delete")
+    public String deleteBudget(@RequestParam("id") Long id) {
+        try {
+            budgetService.deleteBudget(id);
+            return redirectWithMessage("Budget removed.");
+        } catch (Exception ex) {
+            return redirectWithError(ex.getMessage());
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
@@ -232,6 +270,13 @@ public class DashboardController {
         model.addAttribute("recurringTransactions", financeTrackerService.detectRecurringTransactions());
         // D18: Rule suggestions
         model.addAttribute("ruleSuggestions", financeTrackerService.suggestRules());
+
+        // Budget statuses (real-time spend vs limit)
+        model.addAttribute("budgets", budgetService.getAllBudgets());
+        model.addAttribute("budgetStatuses", budgetService.getBudgetStatuses());
+
+        // Recent activity (audit log)
+        model.addAttribute("recentActivity", auditService.getRecentActivity(10));
     }
 
     private LocalDate parseOptionalDate(String dateStr) {

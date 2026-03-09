@@ -88,10 +88,11 @@ Kanso is a **single-user, offline-first personal finance tracker** built with Sp
 ### Key Numbers
 
 - **4 database tables** (profile, category_rule, transaction, uploaded_file)
-- **20 seed categorization rules** covering groceries, transport, subscriptions, housing, income, shopping, etc.
+- **20 seed categorization rules** covering groceries, transport, fuel, subscriptions, housing, utilities, income, shopping, dining
 - **8 DTO records** for clean data transfer between layers
 - **6 integration tests** covering rule engine conflict resolution
 - **5 date format parsers** in the CSV importer
+- **29 sample transactions** spanning 2 months with income, expenses, and anomaly triggers
 - **1 Thymeleaf page** — the entire UI is a single-page server-rendered dashboard
 
 ---
@@ -259,25 +260,27 @@ Flyway manages all schema changes. Hibernate runs in `validate` mode, meaning it
 ```sql
 CREATE TABLE profile (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    display_name    VARCHAR(100) NOT NULL DEFAULT 'Default User',
     encryption_salt VARCHAR(64),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-Stores the global encryption salt for the user. A single row is seeded on first migration. This table enables future multi-profile support without schema changes.
+Stores the single-user profile with display name and encryption salt. A default profile row is seeded on first migration. This table enables future multi-profile support without schema changes.
 
 #### `category_rule` — Categorization rules
 
 ```sql
 CREATE TABLE category_rule (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    pattern_type VARCHAR(10)  DEFAULT 'KEYWORD',
+    pattern_type VARCHAR(10)  NOT NULL DEFAULT 'KEYWORD',
     pattern      VARCHAR(255) NOT NULL,
     category     VARCHAR(100) NOT NULL,
-    priority     INT          DEFAULT 10,
-    enabled      BOOLEAN      DEFAULT TRUE,
-    is_default   BOOLEAN      DEFAULT FALSE,
-    created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+    priority     INT          NOT NULL DEFAULT 0,
+    enabled      BOOLEAN      NOT NULL DEFAULT TRUE,
+    is_default   BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -288,13 +291,14 @@ Each rule defines a pattern (KEYWORD or REGEX), maps to a category, and has a pr
 ```sql
 CREATE TABLE transaction (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    date            DATE         NOT NULL,
-    description     VARCHAR(500) NOT NULL,
-    amount          DECIMAL(12,2) NOT NULL,
-    category        VARCHAR(100),
+    date            DATE           NOT NULL,
+    description     VARCHAR(500)   NOT NULL,
+    amount          DECIMAL(15, 2) NOT NULL,
+    category        VARCHAR(100)   NOT NULL DEFAULT 'Uncategorized',
     matched_rule_id BIGINT,
-    created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (matched_rule_id) REFERENCES category_rule(id) ON DELETE SET NULL
+    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_transaction_rule FOREIGN KEY (matched_rule_id)
+        REFERENCES category_rule(id) ON DELETE SET NULL
 );
 CREATE INDEX idx_transaction_date ON transaction(date);
 CREATE INDEX idx_transaction_category ON transaction(category);
@@ -309,9 +313,9 @@ CREATE TABLE uploaded_file (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     original_name VARCHAR(255) NOT NULL,
     stored_path   VARCHAR(500) NOT NULL,
-    encrypted     BOOLEAN      DEFAULT FALSE,
-    row_count     INT          DEFAULT 0,
-    uploaded_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+    encrypted     BOOLEAN      NOT NULL DEFAULT FALSE,
+    row_count     INT          NOT NULL DEFAULT 0,
+    uploaded_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -321,15 +325,17 @@ Every CSV upload is logged with its original filename, storage location, encrypt
 
 | Pattern | Category | Priority | Notes |
 |---|---|---|---|
-| `walmart`, `kroger`, `whole foods`, `trader joe`, `costco` | Groceries | 10 | Major grocery chains |
-| `uber`, `lyft`, `gas station`, `shell`, `chevron` | Transport | 10 | Ride-share + fuel |
-| `netflix`, `spotify`, `hulu`, `disney+` | Subscriptions | 10 | Streaming services |
+| `walmart`, `target`, `costco`, `kroger` | Groceries | 10 | Major grocery chains |
+| `uber`, `lyft` | Transport | 10 | Ride-share |
+| `shell`, `chevron` | Fuel | 10 | Gas stations |
+| `netflix`, `spotify` | Subscriptions | 10 | Streaming services |
 | `rent`, `mortgage` | Housing | 15 | Higher priority — housing is a major category |
-| `electric`, `water bill`, `internet`, `phone bill` | Utilities | 10 | Household utilities |
-| `salary`, `payroll`, `direct deposit` | Income | 20 | Highest priority — income detection |
+| `electric`, `water bill`, `internet` | Utilities | 8 | Household utilities (slightly lower priority) |
+| `salary`, `payroll` | Income | 20 | Highest priority — income detection |
 | `amazon` | Shopping | 5 | Lower priority — Amazon sells everything |
+| `restaurant`, `cafe` | Dining | 10 | Eating out |
 
-The priority values are intentional: `salary` (20) > `rent` (15) > most patterns (10) > `amazon` (5). This means "Salary deposit from Amazon" would be categorized as Income, not Shopping.
+The priority values are intentional: `salary` (20) > `rent` (15) > most patterns (10) > `utilities` (8) > `amazon` (5). This means "Salary deposit from Amazon" would be categorized as Income, not Shopping.
 
 ---
 
@@ -402,7 +408,7 @@ public class TransactionEntity {
 
     @Column(nullable = false) private LocalDate date;
     @Column(nullable = false, length = 500) private String description;
-    @Column(nullable = false, precision = 12, scale = 2) private BigDecimal amount;
+    @Column(nullable = false, precision = 15, scale = 2) private BigDecimal amount;
     @Column(length = 100) private String category;
     @Column(name = "matched_rule_id") private Long matchedRuleId;
     @Column(name = "created_at") private LocalDateTime createdAt;
@@ -412,6 +418,7 @@ public class TransactionEntity {
 **Design details:**
 - **Amount convention:** Negative = expense, positive = income. Helper methods `isExpense()` and `isIncome()` encapsulate this logic.
 - **matched_rule_id:** FK to `category_rule`. Tracks which rule made the categorization decision, enabling full audit trail.
+- **Precision:** `DECIMAL(15,2)` — supports amounts up to 9,999,999,999,999.99.
 - **Indexes:** On `date` (for date range queries) and `category` (for spending aggregation).
 - **@PrePersist:** Automatically sets `createdAt` to `LocalDateTime.now()` on first save.
 
@@ -541,13 +548,13 @@ All DTOs are Java **records** — immutable, concise, with automatic `equals()`,
 public record TransactionDto(
     Long id, LocalDate date, String description,
     BigDecimal amount, String category, Long matchedRuleId,
-    boolean income
+    boolean income, boolean expense
 ) {
     public static TransactionDto from(TransactionEntity e) { ... }
 }
 ```
 
-The `income` flag is derived from `amount > 0` and used in the template for CSS coloring (green for income, red for expenses).
+The `income` and `expense` flags are derived from `amount > 0` and `amount < 0` respectively, used in the template for CSS coloring (green for income, red for expenses).
 
 ### `MonthlyTrendDto`
 
@@ -1183,18 +1190,20 @@ The project includes `cloudbuild.yaml`, `deploy-to-cloud-run.sh`, and `CLOUD_RUN
 
 ### `sample-transactions.csv`
 
-28+ transactions spanning January–February 2026, designed to exercise every feature:
+29 transactions spanning January–February 2026, designed to exercise every feature:
 
 | Category | Example Transactions |
 |---|---|
-| **Income** | Salary Direct Deposit ($5,000.00) × 2 months |
-| **Housing** | Monthly Rent Payment (-$1,500) × 2 months |
-| **Groceries** | Walmart, Trader Joe's, Whole Foods, Costco |
-| **Transport** | Uber ride, Shell Gas Station, Lyft ride |
-| **Subscriptions** | Netflix, Spotify, Disney+, Hulu |
-| **Dining** | Chipotle, Pizza delivery, Restaurant |
-| **Utilities** | Electric bill, Internet bill, Phone bill |
-| **Shopping** | Amazon, Target, Nike, Barnes & Noble |
+| **Income** | Monthly Salary ($4,200) × 2 months, Freelance Payment ($850), Bonus ($600) |
+| **Housing** | Rent Payment (-$1,600) × 2 months |
+| **Groceries** | Costco Wholesale, Whole Foods, Target Grocery, Trader Joe's |
+| **Transport** | Uber ride, Shell Gas Station, Lyft to Airport, Chevron |
+| **Subscriptions** | Netflix |
+| **Dining** | McDonald's, Restaurant Downtown, Chipotle, Valentine Dinner |
+| **Utilities** | Water Bill × 2, Electric Bill × 2 |
+| **Shopping** | Walmart Supercenter, Amazon, Best Buy Electronics |
+| **Fitness** | Gym Membership |
+| **Entertainment** | Apple App Store |
 | **Anomaly** | Emergency Car Repair (-$920.00) — designed to trigger anomaly detection |
 
 The sample data specifically includes:
