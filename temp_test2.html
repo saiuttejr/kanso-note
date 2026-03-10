@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test2</title>
+    <link rel="stylesheet" href="src/main/resources/static/styles.css">
+    <style>/* override local path */</style>
+</head>
+<body>
+<article class="card">
+    <h2>Monthly Trends</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Month</th>
+            <th>Income</th>
+            <th>Expenses</th>
+            <th>Net</th>
+            <th>MoM \u0394</th>
+            <th>3m Avg</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Dec 2026</td>
+            <td>$0 but with really long text to force overflow and see if card handles it gracefully</td>
+            <td>$3359.11</td>
+            <td class="expense">-$3359.11</td>
+            <td class="income">-48.0%</td>
+            <td>$4261.00</td>
+        </tr>
+        
+        <!-- add more rows to test width -->
+        </tbody>
+    </table>
+</article>
+</body>
+</html>

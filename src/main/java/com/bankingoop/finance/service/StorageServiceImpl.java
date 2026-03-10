@@ -75,6 +75,39 @@ public class StorageServiceImpl implements StorageService {
         return target;
     }
 
+    /** Saves CSV from byte array with timestamp prefix and optional encryption to uploads directory. */
+    @Override
+    public Path saveCsvFromBytes(byte[] fileBytes, String originalFilename, char[] passphrase) throws IOException, GeneralSecurityException {
+        if (fileBytes == null || fileBytes.length == 0) {
+            throw new IllegalArgumentException("File content is empty.");
+        }
+
+        String originalName = sanitizeFileName(originalFilename);
+        String timestamp = LocalDateTime.now().format(FILE_TS);
+        boolean encrypt = passphrase != null && passphrase.length > 0;
+        String storedName = timestamp + "_" + originalName + (encrypt ? ".enc" : "");
+
+        Path target = uploadDir.resolve(storedName).normalize();
+        // Path traversal guard: ensure the resolved path is still inside uploadDir
+        if (!target.startsWith(uploadDir)) {
+            throw new SecurityException("Invalid file path — possible path traversal attempt.");
+        }
+
+        if (encrypt) {
+            // Read → encrypt → write (all in memory; acceptable for ≤5 MB files)
+            try (InputStream in = new java.io.ByteArrayInputStream(fileBytes);
+                 OutputStream out = Files.newOutputStream(target)) {
+                EncryptionUtil.encryptStream(in, out, passphrase);
+            }
+            log.info("Saved encrypted CSV upload: {}", storedName);
+        } else {
+            Files.write(target, fileBytes);
+            log.info("Saved plain CSV upload: {}", storedName);
+        }
+
+        return target;
+    }
+
     /** Lists all regular files in uploads directory in sorted order. */
     @Override
     public List<Path> listUploads() {

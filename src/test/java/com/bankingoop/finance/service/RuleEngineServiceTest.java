@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bankingoop.finance.repository.CategoryRuleRepository;
 import com.bankingoop.finance.repository.TransactionRepository;
+import com.bankingoop.finance.entity.CategoryRuleEntity;
 
 /**
  * Integration tests for the JPA-backed RuleEngineService.
@@ -103,5 +105,68 @@ class RuleEngineServiceTest {
                 "NETFLIX Monthly", new BigDecimal("-15.99"), null);
 
         assertEquals("Streaming", result.category());
+    }
+
+    @Test
+    void higherPriorityOverridesLongerMatch() {
+        // shorter keyword but higher priority should win
+        ruleEngineService.addCustomRule("KEYWORD", "foo", "CategoryA", 20);
+        ruleEngineService.addCustomRule("KEYWORD", "foobar", "CategoryB", 10);
+        categoryRuleRepository.flush();
+
+        RuleEngineService.MatchResult result = ruleEngineService.categorize(
+                "FooBar Baz", new BigDecimal("-5.00"), null);
+
+        // category name will be normalized to title case => "Categorya"
+        assertEquals("Categorya", result.category());
+    }
+
+    @Test
+    void disabledRuleIsIgnored() {
+        CategoryRuleEntity custom = ruleEngineService.addCustomRule("KEYWORD", "ignoreme", "Misc", 50);
+        ruleEngineService.toggleRule(custom.getId(), false);
+        categoryRuleRepository.flush();
+
+        RuleEngineService.MatchResult result = ruleEngineService.categorize(
+                "This should ignoreme pattern", new BigDecimal("-1.00"), null);
+        // fallback negative amount
+        assertEquals("Uncategorized", result.category());
+    }
+
+    @Test
+    void invalidRegexThrowsOnCreation() {
+        assertThrows(IllegalArgumentException.class, () ->
+                ruleEngineService.addCustomRule("REGEX", "*not a valid regex", "Broken", 5));
+    }
+
+    @Test
+    void explicitCategoryNormalization() {
+        RuleEngineService.MatchResult result = ruleEngineService.categorize(
+                "Anything", new BigDecimal("0"), "  personal   LOANS  ");
+        assertEquals("Personal Loans", result.category());
+    }
+
+    @Test
+    void nullOrBlankDescriptionHandledGracefully() {
+        // no exception, falls back based on amount
+        RuleEngineService.MatchResult r1 = ruleEngineService.categorize(null, new BigDecimal("10"), null);
+        assertEquals("Income", r1.category());
+
+        RuleEngineService.MatchResult r2 = ruleEngineService.categorize("", new BigDecimal("-5"), null);
+        assertEquals("Uncategorized", r2.category());
+    }
+
+    @Test
+    void patternTypeCaseInsensitiveAndKeywordCaseInsensitive() {
+        ruleEngineService.addCustomRule("regex", "TESTCASE", "CaseCat", 5);
+        ruleEngineService.addCustomRule("KEYword", "MiXeDcAsE", "MixCat", 5);
+        categoryRuleRepository.flush();
+
+        RuleEngineService.MatchResult r1 = ruleEngineService.categorize("this testcase hits", BigDecimal.ZERO, null);
+        // normalization lowercases trailing characters
+        assertEquals("Casecat", r1.category());
+
+        RuleEngineService.MatchResult r2 = ruleEngineService.categorize("mixedcase here", BigDecimal.ZERO, null);
+        assertEquals("Mixcat", r2.category());
     }
 }

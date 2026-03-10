@@ -15,6 +15,9 @@ public interface StorageService {
     /** Saves uploaded CSV file with optional AES-256 encryption to local storage. */
     Path saveCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException;
 
+    /** Saves CSV from byte array with optional AES-256 encryption to local storage. */
+    Path saveCsvFromBytes(byte[] fileBytes, String originalFilename, char[] passphrase) throws IOException, GeneralSecurityException;
+
     /** Lists all files in the uploads directory in sorted order. */
     List<Path> listUploads();
 

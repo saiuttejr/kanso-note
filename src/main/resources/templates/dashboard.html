@@ -119,6 +119,10 @@
                 <button type="submit">Upload CSV</button>
             </form>
             <p class="hint">Expected columns: <code>date,description,amount,category</code> (category optional).</p>
+            <form method="post" th:action="@{/transactions/reanalyse}">
+                <button type="submit" class="secondary">ReAnalyse Existing Transactions</button>
+            </form>
+            <p class="hint">Re-apply all categorization rules to existing transactions.</p>
             <form method="post"
                   th:action="@{/transactions/clear}"
                   onsubmit="return confirm('Clear all current transactions? This cannot be undone.');">

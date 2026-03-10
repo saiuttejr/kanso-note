@@ -138,10 +138,15 @@ public class FinanceTrackerService {
     @Transactional
     @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
     public int importFromCsv(MultipartFile file, char[] passphrase) throws IOException, GeneralSecurityException {
-        // Save uploaded file to local storage (optionally encrypted)
-        Path storedPath = storageService.saveCsv(file, passphrase);
+        // Read file into byte array once to avoid consuming the stream multiple times
+        byte[] fileBytes = file.getBytes();
+        
+        // Parse CSV from byte array
+        List<CsvTransactionRow> rows = csvImportService.parseFromBytes(fileBytes);
 
-        List<CsvTransactionRow> rows = csvImportService.parse(file);
+        // Save uploaded file to local storage (optionally encrypted)
+        Path storedPath = storageService.saveCsvFromBytes(fileBytes, file.getOriginalFilename(), passphrase);
+
         List<Long> importedIds = new ArrayList<>();
         for (CsvTransactionRow row : rows) {
             TransactionDto dto = addManualTransaction(row.getDate(), row.getDescription(),
@@ -487,6 +492,31 @@ public class FinanceTrackerService {
     /** Delegates to generate auto-suggestions for new rules from uncategorized transactions. */
     public List<RuleSuggestionDto> suggestRules() {
         return ruleEngineService.suggestRules();
+    }
+
+    /** Recategorizes all transactions using current rules and updates their categories. */
+    @Transactional
+    @CacheEvict(value = {"monthlyTrends", "topCategories", "savingsRate", "budgetStatuses", "recurringTransactions"}, allEntries = true)
+    public int recategorizeAllTransactions() {
+        List<TransactionEntity> allTransactions = transactionRepository.findAll();
+        int updatedCount = 0;
+
+        for (TransactionEntity entity : allTransactions) {
+            RuleEngineService.MatchResult match = ruleEngineService.categorize(
+                    entity.getDescription(), entity.getAmount(), null);
+            
+            // Only update if category changed
+            if (!entity.getCategory().equals(match.category())) {
+                entity.setCategory(match.category());
+                entity.setMatchedRuleId(match.matchedRuleId());
+                transactionRepository.save(entity);
+                updatedCount++;
+            }
+        }
+
+        lastActionDescription = "Recategorized " + updatedCount + " transactions";
+        log.info("Recategorized {} out of {} transactions", updatedCount, allTransactions.size());
+        return updatedCount;
     }
 
     /** Exports transactions within date range to CSV format with proper escaping. */

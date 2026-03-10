@@ -166,6 +166,17 @@ public class DashboardController {
         return redirectWithError("Nothing to undo.");
     }
 
+    // Recategorizes all transactions using current rules and returns updated count.
+    @PostMapping("/transactions/reanalyse")
+    public String reanalyseTransactions() {
+        int updatedCount = financeTrackerService.recategorizeAllTransactions();
+        if (updatedCount > 0) {
+            return redirectWithMessage("Recategorized " + updatedCount + " transaction(s) with updated rules.");
+        } else {
+            return redirectWithMessage("All transactions are already categorized correctly.");
+        }
+    }
+
     // Creates a categorization rule for auto-categorizing transactions based on keywords.
     @PostMapping("/rules")
     public String addRule(@RequestParam("pattern") String pattern,

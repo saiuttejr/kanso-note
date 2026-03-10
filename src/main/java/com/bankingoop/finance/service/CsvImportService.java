@@ -46,6 +46,16 @@ public class CsvImportService {
         }
     }
 
+    /** Parses a CSV from byte array into list of transaction rows with validation. */
+    public List<CsvTransactionRow> parseFromBytes(byte[] fileBytes) throws IOException {
+        if (fileBytes == null || fileBytes.length == 0) {
+            return List.of();
+        }
+        try (InputStream inputStream = new java.io.ByteArrayInputStream(fileBytes)) {
+            return parse(inputStream);
+        }
+    }
+
     /** Core CSV parsing logic with header mapping and row validation. */
     private List<CsvTransactionRow> parse(BufferedReader reader) throws IOException {
         String headerLine = reader.readLine();

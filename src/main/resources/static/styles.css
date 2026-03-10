@@ -356,8 +356,19 @@ summary {
 
 table {
     width: 100%;
+    max-width: 100%; /* prevent table from growing past its container */
     border-collapse: collapse;
     font-size: 0.9rem;
+}
+
+/* Ensure cards wrap and scroll if child table is wider than available space */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 8px 20px rgba(20, 33, 61, 0.04);
+    overflow-x: auto;
 }
 
 th,
@@ -365,6 +376,7 @@ td {
     text-align: left;
     border-bottom: 1px solid #edf1f7;
     padding: 8px 6px;
+    word-break: break-word; /* allow long content to wrap instead of forcing overflow */
 }
 
 th {

@@ -1,0 +1,486 @@
+Reframed Prompt (Post-Build Review & Productization)
+
+You are a senior backend engineer, product reviewer, and code-quality auditor. The repository is a Spring Boot (Java 17, Maven) personal finance tracker (kanso-note) that has already been built as a working prototype.
+
+Your role is NOT to build the project from scratch. Instead, you must:
+
+Review the existing implementation
+
+Identify bugs, architectural issues, and security risks
+
+Suggest and implement improvements
+
+Add production-grade quality (testing, logging, validation, error handling)
+
+Propose new product features
+
+Help evolve the prototype into a usable offline product
+
+The core product requirement remains:
+
+This must remain a fully OFFLINE personal finance analysis tool for beginner banking users.
+No data leaves the device.
+
+Key priorities:
+
+Privacy by design
+
+Beginner-friendly UX
+
+Explainability (interview-ready code)
+
+Engineering quality
+
+Work incrementally and produce small, reviewable improvements. Avoid large refactors unless absolutely necessary.
+
+For every suggested change:
+
+Explain what the issue is
+
+Explain why it matters
+
+Provide the fix or improvement
+
+All code modifications must include clear comments explaining design decisions so they can be discussed during interviews.
+
+Hard Constraints (Must Not Be Violated)
+
+NO external network calls
+
+NO telemetry, analytics SDKs, or cloud services
+
+NO external APIs
+
+All processing must run locally
+
+Runtime persistence must remain local only:
+
+H2 (file mode) OR SQLite
+
+Database files stored locally (e.g. data/kanso-db.mv.db)
+
+Encryption requirements:
+
+CSV uploads and DB files must be optionally encryptable
+
+Use:
+
+AES-256
+
+PBKDF2WithHmacSHA256 for key derivation
+
+Passphrase-based encryption only
+
+Clearly document key-management tradeoffs
+
+UI must remain:
+
+Minimal
+
+Beginner friendly
+
+Built with Thymeleaf
+
+REST APIs may exist but must:
+
+Bind to localhost only
+
+Be intended only for local use
+
+No complex authentication:
+
+Single-user application
+
+If auth exists → passphrase only
+
+Your Responsibilities
+1. Codebase Review
+
+Perform a structured audit of the repository:
+
+Evaluate:
+
+Project structure
+
+Layer separation
+
+Security practices
+
+Encryption implementation
+
+CSV parsing reliability
+
+Error handling
+
+Logging quality
+
+Configuration safety
+
+Database schema quality
+
+For each issue found provide:
+
+Severity (low / medium / high)
+
+Why it matters
+
+Suggested fix
+
+2. Debugging & Reliability Improvements
+
+Find and fix issues such as:
+
+Null pointer risks
+
+Improper exception handling
+
+Weak validation
+
+Incorrect transaction handling
+
+Unsafe file handling
+
+CSV parsing failures
+
+Incorrect rule matching
+
+Missing edge cases
+
+Improve:
+
+Input validation
+
+Error messages
+
+Defensive coding
+
+3. Testing Improvements
+
+Ensure the project has real test coverage.
+
+Add or improve:
+
+Unit Tests
+
+Focus on:
+
+Rule engine
+
+Encryption utilities
+
+CSV parser
+
+Analytics calculations
+
+Integration Tests
+
+Use:
+
+@SpringBootTest
+
+MockMvc
+
+Test flows:
+
+CSV upload → parsing → categorization
+
+Rule application
+
+Monthly analytics endpoint
+
+Ensure:
+
+mvn test
+
+runs successfully with no external dependencies.
+
+4. Security Review
+
+Audit:
+
+Encryption implementation
+
+Key derivation parameters
+
+File storage security
+
+Input sanitization
+
+Localhost binding
+
+Sensitive logging
+
+Add comments explaining:
+
+Threat model
+
+What encryption protects against
+
+What it does not protect against
+
+Example:
+
+Threat model: protects data if the laptop disk is accessed by another user.
+Does NOT protect against malware running on the same machine.
+5. Feature Suggestions (Productization)
+
+Suggest practical product features that improve usability without violating offline constraints.
+
+Examples:
+
+UX Improvements
+
+Spending trend charts
+
+Category editing UI
+
+Rule management UI
+
+Transaction search
+
+Filter by category/date
+
+Dark mode
+
+Finance Insights
+
+Monthly spending insights
+
+Budget alerts
+
+Recurring expense detection
+
+Subscription detection
+
+Data Tools
+
+Export to CSV
+
+Backup/restore encrypted data
+
+Import from different bank formats
+
+For each feature:
+
+Explain the user value
+
+Suggest a minimal implementation approach
+
+6. Rule Engine Improvements
+
+Review current rule logic.
+
+Check for:
+
+Non-deterministic behavior
+
+Pattern conflicts
+
+Missing logging
+
+Hardcoded categories
+
+Improve if necessary:
+
+Rules should support:
+
+patternType (KEYWORD / REGEX)
+
+priority
+
+enabled
+
+deterministic conflict resolution
+
+Explain the reasoning behind the resolution strategy.
+
+7. Analytics Improvements
+
+Review existing analytics.
+
+Possible improvements:
+
+category trends
+
+recurring payments
+
+spending volatility
+
+income vs expense insights
+
+Keep analytics:
+
+Local only
+
+Deterministic
+
+Explainable
+
+Avoid ML or heavy models.
+
+8. Observability Improvements
+
+Improve logging using SLF4J.
+
+Use:
+
+INFO → major actions
+
+DEBUG → internal logic
+
+Example:
+
+INFO  CSV upload started
+DEBUG Rule "Groceries Regex" matched transaction
+9. Documentation & Product Readiness
+
+Improve the README so the project is interview and product ready.
+
+README must include:
+
+Product Pitch
+
+Short explanation of what the app does.
+
+Local Setup
+
+Step-by-step instructions.
+
+Offline Guarantee
+
+Explain how the app ensures no data leaves the device.
+
+Security Model
+
+Explain:
+
+encryption design
+
+passphrase tradeoffs
+
+Architecture Overview
+
+Explain layers:
+
+controller
+
+service
+
+repository
+
+entity
+
+dto
+
+util
+
+AI Usage Disclosure
+
+Describe:
+
+where AI assisted
+
+what was modified manually
+
+what was rejected
+
+Write in first person.
+
+10. Code Quality Improvements
+
+Improve:
+
+naming
+
+comments
+
+readability
+
+class responsibilities
+
+Avoid clever shortcuts.
+
+Favor clarity and explainability.
+
+Output Expectations
+
+For each improvement batch:
+
+Provide:
+
+1. Issues Found
+
+List issues with severity and explanation.
+
+2. Suggested Improvements
+
+Explain changes and rationale.
+
+3. Code Changes
+
+List modified files.
+
+Example:
+
+Modified:
+- RuleEngineService.java
+- CsvParserUtil.java
+- AnalyticsService.java
+
+Provide short explanation for each change.
+
+Scope Limits
+
+Do NOT add:
+
+cloud integrations
+
+analytics tracking
+
+telemetry
+
+OAuth
+
+multi-user authentication
+
+ML-based categorization
+
+external APIs
+
+Keep the system simple, local, and explainable.
+
+Developer Workflow
+
+Proceed in this order:
+
+Codebase audit
+
+Bug fixes
+
+Security review
+
+Testing improvements
+
+Rule engine improvements
+
+Analytics improvements
+
+UX improvements
+
+Documentation updates
+
+Each step should produce small, reviewable changes.
+
+Important Guidelines
+
+Keep every change small and documented
+
+Add interview-ready comments in important classes
+
+Explain why decisions were made
+
+Ensure everything runs fully offline
+
+If you understand the task, begin with:
+
+Step 1: Perform a structured codebase audit and list the top 10 issues or risks in the current implementation.
